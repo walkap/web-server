@@ -29,11 +29,14 @@ void *handle_request(void *arg)
     printf("%s\n", buff);
 
     b_left = strlen(http_response);
-    while ((b_written = write(*conn, http_response, b_left)) > 0) {
+   /* while ((b_written = write(*conn, http_response, b_left)) > 0) {
         exit_on_error(b_written == -1, "error in write");
         b_left -= b_written;
         http_response += b_written;
-    }
+    }*/
+
+    b_written = write(*conn, http_response, b_left);
+    exit_on_error(b_written == -1, "error in write");
 
     rv = close(*conn);
     exit_on_error(rv < 0, "error in close");
