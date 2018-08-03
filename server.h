@@ -41,6 +41,7 @@ void *handle_request(void *arg)
     rv = close(*conn);
     exit_on_error(rv < 0, "error in close");
 
+    printf("------Waiting for requests------\n");
     pthread_exit(NULL);
 
 }
@@ -78,9 +79,9 @@ void run_server(int *listensd)
     pthread_t thread;
 
 
-    for(;;) {
+    printf("------Waiting for requests------\n");
 
-        printf("------Waiting for requests------\n");
+    for(;;) {
 
         connsd = accept(*listensd, (struct sockaddr*) NULL, NULL);
       exit_on_error(connsd < 0, "error in  accept");
