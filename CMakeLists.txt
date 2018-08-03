@@ -2,5 +2,5 @@ cmake_minimum_required(VERSION 3.10)
 project(web-server C)
 
 set(CMAKE_C_STANDARD 11)
-
-add_executable(web-server main.c)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread -Wall -Wextra -Wpedantic")
+add_executable(web-server server.c server.h utils.h)
