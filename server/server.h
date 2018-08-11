@@ -16,34 +16,87 @@ struct thread_data {
     int sd;
 };
 
-void *handle_request(void *arg)
-{
-    struct thread_data *pt = (struct thread_data *)arg;
+void handle_request(void *arg) {
+    struct thread_data *pt = (struct thread_data *) arg;
     int conn = pt->sd;
 
     ssize_t b_read, b_written;
-    char *buff;
     char *http_response;
     int rv;
-    buff = malloc(MAXLINE);
-    exit_on_error(buff == NULL, "error in malloc");
+    char buff[MAXLINE] = {0};
+
 
     b_read = read(conn, buff, MAXLINE);
-    exit_on_error(b_read == -1, "error in read");
+    if (b_read == -1 || b_read == 0) {
+
+        rv = shutdown(conn, 0);
+        exit_on_error(rv < 0, "error in close");
+        pt->sd = -1;
+        printf("------Waiting for requests------\n");
+        pthread_exit(NULL);
+    }
 
     printf("%s\n", buff);
 
     http_response = set_response(buff);
 
-    b_written = write(conn, http_response, strlen(http_response));
+    printf("%s\n", http_response);
+
+    b_written = write(conn, http_response, strlen(http_response)+1);
     exit_on_error(b_written == -1, "error in write");
 
-    rv = close(conn);
-    exit_on_error(rv < 0, "error in close");
-    pt->sd=-1;
-    printf("------Waiting for requests------\n");
-    pthread_exit(NULL);
 
+    /*if (1) {
+
+        int rv;
+        char buffer[MAXLINE] = {0};
+
+
+        struct timeval tv;
+
+        tv.tv_sec = 10;
+
+        rv = setsockopt(conn, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(struct timeval));
+        exit_on_error(rv < 0, "error in setsockopt");
+
+        while (1) {
+
+            printf("in keep_connection\n");
+            int nread;
+
+                nread = recv(conn, buffer, MAXLINE, 0);
+            printf("byte letti = %i\n", nread);
+
+            if (errno == EWOULDBLOCK) {
+                errno = 0;
+                nread = 0;
+            }
+            for (int i = 1; i < MAXLINE; i++) {
+                if (buffer[i - 1] == '\n' && buffer[i] == '\n') {
+                    buffer[i + 1] = '\0';
+                    nread = strlen(buffer);
+                    break;
+                }
+            }
+
+            if (nread == 0) break;
+            printf("%sbyte ricevuti = %i\n", buffer, rv);
+
+            http_response = set_response(buffer);
+
+            rv = write(conn, http_response, strlen(http_response));
+            exit_on_error(rv == -1, "error in write");
+            printf("%sfinewrite\n", http_response);
+
+        }
+    }*/
+
+
+        rv = shutdown(conn, 0);
+        exit_on_error(rv < 0, "error in close");
+        pt->sd = -1;
+        printf("------Waiting for requests------\n");
+        pthread_exit(NULL);
 }
 
 void set_addr(struct sockaddr_in* ad)
@@ -75,6 +128,18 @@ int init_server()
 
 }
 
+struct thread_data *alloc_thread_data()
+{
+    struct thread_data *td = malloc(sizeof(struct thread_data)*MAXCONN);
+    exit_on_error(td==NULL, "error in malloc");
+
+    for (int j = 0; j < MAXCONN; j++) {
+        td[j].sd = -1;
+    }
+
+    return td;
+}
+
 int find_free_thread(struct thread_data* pt)
 {
     int c = 0;
@@ -89,17 +154,11 @@ int find_free_thread(struct thread_data* pt)
 
 void run_server(int *listensd)
 {
-    int connsd;
     int l=*listensd;
     int rv;
     int slot;
 
-    struct thread_data *td = malloc(sizeof(struct thread_data)*MAXCONN);
-    exit_on_error(td==NULL, "error in malloc");
-
-    for (int j = 0; j < MAXCONN; j++) {
-        td[j].sd = -1;
-    }
+    struct thread_data *td = alloc_thread_data();
 
     printf("Server started at localhost:8000/index.html\n");
 
@@ -107,20 +166,24 @@ void run_server(int *listensd)
 
     for(;;) {
 
-        connsd = accept(l, (struct sockaddr*) NULL, NULL);
+        int connsd = accept(l, (struct sockaddr*) NULL, NULL);
         exit_on_error(connsd < 0, "error in  accept");
+
+        printf("Connessione accettata\n");
 
         slot = find_free_thread(td);
         exit_on_error(slot ==-1, "max num of connections reached");
 
-
         td[slot].sd=connsd;
 
-        rv = pthread_create(&(td[slot].thread), NULL, handle_request,  (void *)&td[slot]);
+        rv = pthread_create(&(td[slot].thread), NULL, (void *)handle_request,  (void *)&td[slot]);
+        exit_on_error(rv != 0, "error in pthread_create");
+
+        rv = pthread_detach(td[slot].thread);
         exit_on_error(rv != 0, "error in pthread_create");
 
 
-  }
+    }
 }
 
 #endif //WEB_SERVER_H

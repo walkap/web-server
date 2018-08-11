@@ -51,6 +51,7 @@ void parse_header_line(struct http_request *r, char* t, char* type)
 
 
 }
+
 struct http_request* parse_request(char *str)
 {
     struct http_request* request;
@@ -66,10 +67,12 @@ struct http_request* parse_request(char *str)
 
     while( token != NULL ) {
 
-        if (strstr(token, "User-Agent:")!= NULL)
+        if (strstr(token, "User-Agent:")!= NULL) {
             parse_header_line(request, token, "user_agent");
-        else if (strstr(token, "Accept:")!= NULL)
-            parse_header_line(request, token,"accept");
+        }
+        if (strstr(token, "Accept:")!= NULL) {
+            parse_header_line(request, token, "accept");
+        }
 
 
         token = strtok(NULL, s);

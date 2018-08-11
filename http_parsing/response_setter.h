@@ -21,6 +21,7 @@ char *set_response(char *str)
 {
       struct http_request* request;
       char *response;
+
       request = parse_request(str);
 
     if (strcmp(request -> method, "GET")==0) {
