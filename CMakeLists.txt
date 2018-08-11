@@ -6,5 +6,5 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread -Wall -Wextra -O2 -fopenmp -DMAGICK
 include_directories(/usr/local/include/ImageMagick-7)
 find_package(ImageMagick COMPONENTS MagickWand)
 add_executable(main server/server.c)
-add_executable(adapt image_adapter.c)
+add_executable(adapt image_processing/image_resizing.c image_processing/image_resizing.h)
 target_link_libraries(adapt ${ImageMagick_LIBRARIES})
