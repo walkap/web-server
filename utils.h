@@ -15,6 +15,7 @@
 #include <asm/ioctls.h>
 #include <stropts.h>
 #include <arpa/inet.h>
+#include <ctype.h>
 
 #define DIM_HEADER 300
 
@@ -29,32 +30,36 @@ void exit_on_error (int condition, const char * message)
     }
 }
 
-int readn(int fd, char *buf, int n) {
+int readn(int conn, char *ptr, int n) {
 
-    int nread;
+    ssize_t readn;
+    size_t nleft;
 
-    while(1) {
-        nread = recv(fd, buf, n, 0);
-        if (nread != 0) break;
-        printf("attesa\n");
-        sleep(1);
-    }
-    printf("byte letti = %i", nread);
-    if(errno == EWOULDBLOCK) {
-        errno=0;
-        nread=  0;
-    }
-    if (errno == EINTR || nread < 0) {
-        nread= -1;
-    }
-    for(int i = 1; i < n; i++) {
-        if (buf[i-1] == '\n' && buf[i] == '\n') {
-            buf[i+1] = '\0';
-            nread = strlen(buf);
+    errno = 0;
+    int r = 0;
+
+    nleft = n;
+
+
+    while (nleft > 0) {
+        fflush(stdout);
+        if ((readn = recv(conn, ptr, nleft, 0)) > 0) {
+            nleft -= readn;
+            ptr += readn;
+            if (*(ptr - 2) == '\r' && *(ptr - 1) == '\n') {
+                fflush(stdout);
+                r=1;
+                break;
+            } else continue;
+
+        } else if (errno == EWOULDBLOCK || readn == 0) {
+            r=0;
             break;
         }
     }
-    return nread;
+    return r;
+
+
 }
 
 ssize_t writen(int fd, const void *buf, size_t n) {

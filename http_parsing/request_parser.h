@@ -2,7 +2,6 @@
 #define WEB_SERVER_HTTP_PARSER_H
 
 #include "../utils.h"
-#include <ctype.h>
 
 struct http_request {
 
@@ -11,6 +10,7 @@ struct http_request {
     char *version;
     char *accept;
     char *user_agent;
+    int alive;
 };
 
 double get_double(char *str)
@@ -23,7 +23,6 @@ double get_double(char *str)
 
 double parse_weight(char *str)
 {
-    printf(" accept %s\n", str);
     char* s = "q";
     char *token;
 
@@ -66,6 +65,8 @@ void parse_request_line(struct http_request *r, char* t)
 
     r->uri=token;
 
+    sc="\r";
+
     token = strtok(NULL, sc);
     exit_on_error(token == NULL, "error in strtok in parse_request_line");
 
@@ -83,6 +84,7 @@ struct http_request* parse_request(char *str)
     request = malloc(sizeof(struct http_request));
     exit_on_error(request == NULL, "error in malloc");
 
+    request->alive = 0;
     int len = strlen(str);
     char *buff = malloc(len + 1);
     exit_on_error(buff == NULL, "error in malloc");
@@ -105,6 +107,9 @@ struct http_request* parse_request(char *str)
             request->accept=token;
             printf("%s\n", request->accept);
 
+        }
+        if (strstr(token, "Connection: keep-alive")!= NULL) {
+            request->alive=1;
         }
 
         token = strtok(NULL, s);
