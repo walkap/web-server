@@ -101,11 +101,9 @@ struct http_request* parse_request(char *str)
 
         if (strstr(token, "User-Agent:")!= NULL) {
             request->user_agent=token;
-            printf("%s\n", request->user_agent);
         }
         if (strstr(token, "Accept:")!= NULL) {
             request->accept=token;
-            printf("%s\n", request->accept);
 
         }
         if (strstr(token, "Connection: keep-alive")!= NULL) {

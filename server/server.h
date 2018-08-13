@@ -46,9 +46,10 @@ void handle_request(void *arg) {
         close_connection(pt);
 
     }
-    printf("Connessione accettata\n");
 
-    printf("%s\n", buff);
+    printf("\nConnection accepted\n");
+    printf("\n%s\n", buff);
+    fflush(stdout);
 
     alive = set_response(buff, conn);
 
@@ -67,11 +68,14 @@ void handle_request(void *arg) {
         for(;;) {
 
             char buff[MAXLINE];
-            char *ptr = buff;
             int r;
-            r = readn(conn, ptr, MAXLINE);
+            r = readn(conn, buff, MAXLINE);
 
             if (r){
+
+                printf("\n%s\n", buff);
+                fflush(stdout);
+
                 set_response(buff, conn);
                 continue;
             }
@@ -80,8 +84,9 @@ void handle_request(void *arg) {
         }
     }
 
-        printf("Connessione terminata\n");
+        printf("\nConnection closed\n");
         fflush(stdout);
+
         close_connection(pt);
 }
 
@@ -150,8 +155,8 @@ void run_server(int *listensd)
     struct thread_data *td = alloc_thread_data();
 
     printf("Server started at http://localhost:8000/index.html\n");
-
     printf("------Waiting for requests------\n");
+    fflush(stdout);
 
     for(;;) {
 

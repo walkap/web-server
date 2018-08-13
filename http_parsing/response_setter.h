@@ -10,7 +10,10 @@ void write_response(char *response, int len, int conn, struct http_request* pt)
 {
 
     int b_written;
-    printf("%s\n", response);
+
+    printf("\n%s\n", response);
+    fflush(stdout);
+
     b_written = write(conn, response, len);
     exit_on_error(b_written == -1, "error in write");
 
@@ -26,7 +29,6 @@ char *read_image(char *str2, int *len)
     strcpy(path, str1);
     strcat(path, str2);
 
-    printf("%s\n", path);
     char *fbuffer;
     int length;
     FILE *f;
@@ -65,7 +67,6 @@ char *build_header(int status, char *type, int len, char* version)
 
         snprintf(buff, DIM_HEADER,
                         "%s 200 OK\r\nContent-Type: %s\r\nContent-Length: %i\r\nConnection: keep-alive\r\n\r\n", version, type, len);
-        printf("buffer : %s\n", buff);
         fflush(stdout);
 
     }
@@ -132,7 +133,8 @@ void build_response(struct http_request *req, int conn)
 
         double q = parse_weight(req->accept);
 
-        printf("%f  %s\n", q, req->user_agent);
+        printf("\nimage quality: %.2f\n", q);
+        fflush(stdout);
 
         //TODO modify image given weight q and User-Agent header line
 
