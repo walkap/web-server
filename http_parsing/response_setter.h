@@ -10,7 +10,6 @@ void write_response(char *response, int len, int conn, struct http_request* pt)
 {
 
     int b_written;
-    printf("writing response\n");
     printf("%s\n", response);
     b_written = write(conn, response, len);
     exit_on_error(b_written == -1, "error in write");
