@@ -10,8 +10,10 @@ void write_response(char *response, int len, int conn, struct http_request* pt)
 {
 
     int b_written;
-    printf("writing response\n");
-    printf("%s\n", response);
+
+    printf("\n%s\n", response);
+    fflush(stdout);
+
     b_written = write(conn, response, len);
     exit_on_error(b_written == -1, "error in write");
 
@@ -27,7 +29,6 @@ char *read_image(char *str2, int *len)
     strcpy(path, str1);
     strcat(path, str2);
 
-    printf("%s\n", path);
     char *fbuffer;
     int length;
     FILE *f;
@@ -65,27 +66,28 @@ char *build_header(int status, char *type, int len, char* version)
     if (status == 200) {
 
         snprintf(buff, DIM_HEADER,
-                        "%s 200 OK\r\nContent-Type: %s\r\nContent-Length: %i\r\nConnection: close\r\n\r\n", version, type, len);
-        return buff;
+                        "%s 200 OK\r\nContent-Type: %s\r\nContent-Length: %i\r\nConnection: keep-alive\r\n\r\n", version, type, len);
+        fflush(stdout);
 
     }
     else if (status == 400) {
 
         snprintf(buff, DIM_HEADER,
-                        "%s 400 Bad Request\r\nContent-Type: %s\r\n Content-Length: %i\r\nConnection: close\r\n\r\n",
-                        version, type,len);
-        return buff;
+                        "%s 400 Bad Request\r\nContent-Type: %s\r\nContent-Length: %i\r\nConnection: close\r\n\r\n", version, type,len);
+
     }
     else if (status == 404) {
 
         snprintf(buff, DIM_HEADER,
                         "%s 404 Not Found\r\nConnection: close\r\n\r\n",
                         version);
-        return buff;
+
     }
     else{
         return NULL;
     }
+
+    return buff;
 }
 
 void build_response(struct http_request *req, int conn)
@@ -131,7 +133,8 @@ void build_response(struct http_request *req, int conn)
 
         double q = parse_weight(req->accept);
 
-        printf("%f  %s\n", q, req->user_agent);
+        printf("\nimage quality: %.2f\n", q);
+        fflush(stdout);
 
         //TODO modify image given weight q and User-Agent header line
 
@@ -162,11 +165,19 @@ void build_response(struct http_request *req, int conn)
 
 }
 
-void set_response(char *str, int conn)
+int set_response(char *str, int conn)
 {
+    int alive;
       struct http_request* request;
 
       request = parse_request(str);
+
+      if (request->alive) {
+          alive = 1;
+      }
+      else{
+          alive = 0;
+      }
 
     if (strcmp(request -> method, "GET")!=0 &&
         strcmp(request -> method, "HEAD")!=0) {
@@ -175,6 +186,7 @@ void set_response(char *str, int conn)
 
     build_response(request, conn);
 
+      return alive;
 }
 
 #endif //WEB_SERVER_RESPONSE_H

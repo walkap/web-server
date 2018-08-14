@@ -15,7 +15,6 @@ struct thread_data {
 
     pthread_t thread;
     int sd;
-    char *address;
 };
 
 void close_connection(struct thread_data *pt)
@@ -24,8 +23,6 @@ void close_connection(struct thread_data *pt)
     rv = close(pt->sd);
     exit_on_error(rv < 0, "error in close");
     pt->sd = -1;
-    pt->address=" ";
-    printf("------Waiting for requests------\n");
     pthread_exit(NULL);
 
 }
@@ -34,35 +31,32 @@ void handle_request(void *arg) {
 
     struct thread_data *pt = (struct thread_data *) arg;
     int conn = pt->sd;
-    /*char buffer[MAXLINE] = {0};*/
+    int rv;
+    int alive;
+    rv = pthread_detach(pt->thread);
+    exit_on_error(rv != 0, "error in pthread_create");
 
-    ssize_t b_read; /*b_written;
-    char *http_response;*/
+    ssize_t b_read;
     char buff[MAXLINE] = {0};
 
 
-    b_read = read(conn, buff, MAXLINE);
-    if (b_read == -1 || b_read == 0) {
+    b_read = readn(conn, buff, MAXLINE);
+    if (b_read == 0) {
 
         close_connection(pt);
+
     }
-    printf("%s\n", buff);
 
-    set_response(buff, conn);
+    printf("\nConnection accepted\n");
+    printf("\n%s\n", buff);
+    fflush(stdout);
 
-   /* printf("%li\n", sizeof(http_response));
-
-
-    printf("%s\n", http_response);*/
-/*
-    b_written = write(conn, http_response, sizeof(http_response)+1);
-    exit_on_error(b_written == -1, "error in write");*/
+    alive = set_response(buff, conn);
 
 
-    /*if (1) {
+    if (alive) {
 
-
-        int mode = 0;
+        int rv;
 
         struct timeval tv;
 
@@ -70,43 +64,28 @@ void handle_request(void *arg) {
 
         rv = setsockopt(conn, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(struct timeval));
         exit_on_error(rv < 0, "error in setsockopt");
-        ioctl(conn, FIONBIO, &mode);
 
-        int nread;
+        for(;;) {
 
+            char buff[MAXLINE];
+            int r;
+            r = readn(conn, buff, MAXLINE);
 
-        while (1) {
+            if (r){
 
-            printf("in keep_connection\n");
+                printf("\n%s\n", buff);
+                fflush(stdout);
 
-                nread = read(conn, buffer, MAXLINE);
-
-            printf("in keep_connection, connessione accettata\n");
-
-            if (errno == EWOULDBLOCK || nread == 0) {
-                errno = 0;
-                printf("nread = %i\n", nread);
-                break;
-            }
-            for (int i = 1; i < MAXLINE; i++) {
-                if (buffer[i - 1] == '\n' && buffer[i] == '\n') {
-                    buffer[i + 1] = '\0';
-                    nread = strlen(buffer);
-                    break;
-                }
+                set_response(buff, conn);
+                continue;
             }
 
-            printf("%sbyte ricevuti = %i\n", buffer, rv);
-
-            http_response = set_response(buffer);
-
-            rv = write(conn, http_response, strlen(http_response));
-            exit_on_error(rv == -1, "error in write");
-            printf("%sfinewrite\n", http_response);
-
+            break;
         }
-    }*/
+    }
 
+        printf("\nConnection closed\n");
+        fflush(stdout);
 
         close_connection(pt);
 }
@@ -147,7 +126,6 @@ struct thread_data *alloc_thread_data()
 
     for (int j = 0; j < MAXCONN; j++) {
         td[j].sd = -1;
-        td[j].address = " ";
     }
 
     return td;
@@ -165,26 +143,11 @@ int find_free_thread(struct thread_data* pt)
     return c;
 }
 
-int connection_found(struct thread_data* pt, char *addr)
-{
-    int c = 0;
-    printf("%s\n", addr);
-    while(c < MAXCONN) {
-
-        if (strcmp(pt[c].address, addr)==0){
-            return 1;
-        }
-        c++;
-    }
-    return 0;
-}
 
 void run_server(int *listensd)
 {
     int l=*listensd;
     struct sockaddr_in client;
-    char str[INET_ADDRSTRLEN];
-    struct in_addr ip_client;
     socklen_t len = sizeof(struct sockaddr_in);
     int rv;
     int slot;
@@ -192,8 +155,8 @@ void run_server(int *listensd)
     struct thread_data *td = alloc_thread_data();
 
     printf("Server started at http://localhost:8000/index.html\n");
-
     printf("------Waiting for requests------\n");
+    fflush(stdout);
 
     for(;;) {
 
@@ -205,28 +168,10 @@ void run_server(int *listensd)
 
         td[slot].sd=connsd;
 
-        ip_client = client.sin_addr;
-        inet_ntop( AF_INET, &ip_client, str, INET_ADDRSTRLEN );
-
-       /* if (connection_found(td, str)) {
-            td[slot].sd=-1;
-            printf("Connessione respinta\n");
-            rv = shutdown(connsd, 0);
-            exit_on_error(rv < 0, "error in close");
-            continue;
-        }
-*/
-
-        td[slot].address=str;
-
-        printf("Connessione accettata\n");
-
 
         rv = pthread_create(&(td[slot].thread), NULL, (void *)handle_request,  (void *)&td[slot]);
         exit_on_error(rv != 0, "error in pthread_create");
 
-        rv = pthread_detach(td[slot].thread);
-        exit_on_error(rv != 0, "error in pthread_create");
 
 
     }

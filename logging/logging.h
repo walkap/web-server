@@ -18,10 +18,11 @@ FILE *open_logfile(char* s)
 void logging(struct http_request* pt, char *str, int len)
 {
     int rv;
-    char *s = "\r\n";
+    char *s = " ";
     char *response;
 
     response = strtok(str, s);
+    s="\r";
     response = strtok(NULL, s);
 
     time_t t = time(NULL);
