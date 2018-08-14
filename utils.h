@@ -112,7 +112,7 @@ char *concat(char *s1, char *s2) {
     return target;
 }
 
-char *toString(size_t size){
+char *to_string(size_t size){
     char *ssize = "";
     sprintf(ssize, "%d", (int) size);
     return ssize;
