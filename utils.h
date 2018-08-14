@@ -113,9 +113,9 @@ char *concat(char *s1, char *s2) {
 }
 
 char *to_string(size_t size){
-    char *ssize = "";
-    sprintf(ssize, "%d", (int) size);
-    return ssize;
+    char *string = malloc(sizeof(size));
+    sprintf(string, "%d", (int) size);
+    return string;
 }
 
 
