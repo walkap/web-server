@@ -18,14 +18,15 @@
 
 #define DIM_HEADER 300
 
- char* HTML_400 = "<!DOCTYPE HTML> <html><head><title>400 Bad Request</title></head><body><h1>Bad Request</h1><p>Your browser sent a request that this server could not understand.</p><p>The request line contained invalid characters following the protocol string.</p></body></html>";
- char* HTML_INDEX = "<!DOCTYPE HTML> <html><head><title>Content Adaptation</title></head><body><h1>Content Adaptation: Home Page</h1><p><a href=\"/wizard.jpg\">wizard.jpg</a></p></body></html>";
+//TODO html should be in a proper html page
 
-void exit_on_error (int condition, const char * message)
-{
+char *HTML_400 = "<!DOCTYPE HTML> <html><head><title>400 Bad Request</title></head><body><h1>Bad Request</h1><p>Your browser sent a request that this server could not understand.</p><p>The request line contained invalid characters following the protocol string.</p></body></html>";
+char *HTML_INDEX = "<!DOCTYPE HTML> <html><head><title>Content Adaptation</title></head><body><h1>Content Adaptation: Home Page</h1><p><a href=\"/wizard.jpg\">wizard.jpg</a></p></body></html>";
+
+void exit_on_error(int condition, const char *message) {
     if (condition) {
-        perror (message) ;
-        exit (EXIT_FAILURE) ;
+        perror(message);
+        exit(EXIT_FAILURE);
     }
 }
 
@@ -33,23 +34,23 @@ int readn(int fd, char *buf, int n) {
 
     int nread;
 
-    while(1) {
+    while (1) {
         nread = recv(fd, buf, n, 0);
         if (nread != 0) break;
         printf("attesa\n");
         sleep(1);
     }
     printf("byte letti = %i", nread);
-    if(errno == EWOULDBLOCK) {
-        errno=0;
-        nread=  0;
+    if (errno == EWOULDBLOCK) {
+        errno = 0;
+        nread = 0;
     }
     if (errno == EINTR || nread < 0) {
-        nread= -1;
+        nread = -1;
     }
-    for(int i = 1; i < n; i++) {
-        if (buf[i-1] == '\n' && buf[i] == '\n') {
-            buf[i+1] = '\0';
+    for (int i = 1; i < n; i++) {
+        if (buf[i - 1] == '\n' && buf[i] == '\n') {
+            buf[i + 1] = '\0';
             nread = strlen(buf);
             break;
         }
@@ -83,9 +84,9 @@ char *current_dir() {
  * to the complete string
  * @param s1 - the first string will at the start
  * @param s2 - the second string appended to the first one
- * @return *char
+ * @return char *
  */
-char *concat(char * s1, char *s2){
+char *concat(char *s1, char *s2) {
 
     char *target;
 
@@ -94,15 +95,21 @@ char *concat(char * s1, char *s2){
 
     target = malloc(len1 + len2 + 1);
 
-    if(target == NULL){
+    if (target == NULL) {
         perror("malloc");
         exit(EXIT_FAILURE);
     }
 
     memcpy(target, s1, len1);
-    memcpy(target + len1, s2, len2 +1);
+    memcpy(target + len1, s2, len2 + 1);
 
     return target;
+}
+
+char *toString(size_t size){
+    char *ssize = "";
+    sprintf(ssize, "%d", (int) size);
+    return ssize;
 }
 
 
