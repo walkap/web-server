@@ -88,6 +88,10 @@ char *rename_file(const char *filename, size_t width, size_t height) {
     //Initialize array char to contain the complete new filename and the format
     char *newfilename;
     newfilename = malloc(strlen(filename) + 11);
+    if(newfilename == NULL){
+        perror("malloc");
+        exit(EXIT_FAILURE);
+    }
     //Copy the file name without the format into the array char
     strncpy(newfilename, filename, strlen(filename) - 4);
     //Add the image size and formate to the new file name array char
