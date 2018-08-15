@@ -112,11 +112,4 @@ char *concat(char *s1, char *s2) {
     return target;
 }
 
-char *to_string(size_t size){
-    char *string = malloc(sizeof(size));
-    sprintf(string, "%d", (int) size);
-    return string;
-}
-
-
 #endif //WEB_SERVER_UTILS_H
