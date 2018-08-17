@@ -1,0 +1,6 @@
+#ifndef WEB_SERVER_USER_AGENT_PARSING_H
+#define WEB_SERVER_USER_AGENT_PARSING_H
+
+#include "src/trie/51Degrees.h"
+
+#endif //WEB_SERVER_USER_AGENT_PARSING_H
