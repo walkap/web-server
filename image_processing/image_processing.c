@@ -1,5 +1,55 @@
 #include "image_processing.h"
 
+int resize_image(MagickBooleanType status, MagickWand *magick_wand, size_t height, size_t width);
+
+int compress_image(MagickBooleanType status, MagickWand *magick_wand, float_t quality);
+
+int write_image(MagickBooleanType status, MagickWand *magick_wand, char *filename);
+
+char *rename_file(const char *filename, size_t width, size_t height);
+
+/**
+ * This function resize an image as the name suggest
+ * @param source - Image's filename before the resizing
+ * @param destination - Image's filename after resizing
+ * @param width - Image's widht we want to achieve
+ * @param height - Image's width we want to achieve
+ * @param quality - Image's quality compression, set -1 if it doesn't required
+ */
+
+//TODO the destination shouldn't be chosen but set from size
+int process_image(char *source, size_t width, size_t height, float_t quality) {
+
+    //This rename the image as the formats wants image-widthxheight.jpg
+    char *destination = rename_file(source, width, height);
+
+    MagickBooleanType status;
+    MagickWand *magick_wand;
+
+    //Read an image.
+    MagickWandGenesis();
+    magick_wand = NewMagickWand();
+    //TODO we should set another source for images instead of the project's root -> the source should be chosen by the caller
+    status = MagickReadImage(magick_wand, source);
+    if (status == MagickFalse) {
+        ThrowWandException(magick_wand);
+    }
+
+    //Image resize
+    resize_image(MagickFalse, magick_wand, height, width);
+
+    //Image quality compression
+    compress_image(status, magick_wand, quality);
+
+    //TODO need to concatenate widthxheight to filename and return the new filename,
+    //Write the image then destroy it.
+    write_image(status, magick_wand, destination);
+    free(destination);
+    DestroyMagickWand(magick_wand);
+    MagickWandTerminus();
+    return (0);
+}
+
 /**
  * This function resize an image besides check the aspect ratio and return a proper image
  * with new dimensions as requested
@@ -99,49 +149,10 @@ char *rename_file(const char *filename, size_t width, size_t height) {
     return newfilename;
 }
 
-/**
- * This function resize an image as the name suggest
- * @param source - Image's filename before the resizing
- * @param destination - Image's filename after resizing
- * @param width - Image's widht we want to achieve
- * @param height - Image's width we want to achieve
- * @param quality - Image's quality compression, set -1 if it doesn't required
- */
-
-//TODO the destination shouldn't be chosen but set from size
-int process_image(char *source, size_t width, size_t height, float_t quality) {
-
-    //This rename the image as the formats wants image-widthxheight.jpg
-    char *destination = rename_file(source, width, height);
-
-    MagickBooleanType status;
-    MagickWand *magick_wand;
-
-    //Read an image.
-    MagickWandGenesis();
-    magick_wand = NewMagickWand();
-    //TODO we should set another source for images instead of the project's root -> the source should be chosen by the caller
-    status = MagickReadImage(magick_wand, source);
-    if (status == MagickFalse) {
-        ThrowWandException(magick_wand);
-    }
-
-    //Image resize
-    resize_image(MagickFalse, magick_wand, height, width);
-
-    //Image quality compression
-    compress_image(status, magick_wand, quality);
-
-    //TODO need to concatenate widthxheight to filename and return the new filename,
-    //Write the image then destroy it.
-    write_image(status, magick_wand, destination);
-    DestroyMagickWand(magick_wand);
-    free(destination);
-    MagickWandTerminus();
-    return (0);
-}
+//TODO we should think how to save memory declaring variable such as using unsigned int instead int and so on... See strutture 8.23 pellegrino principe
 
 //TODO this is just to try the process_image function, should be deleted as soon as we test it
 int main() {
+    //TODO we could use always strings as parameter they are simpler to transform to int or size_t and not vice versa
     process_image("scarpe.jpg", 600, 800, 0.5);
 }
