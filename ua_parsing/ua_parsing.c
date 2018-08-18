@@ -1,7 +1,5 @@
 #include "ua_parsing.h"
 
-#include <stdlib.h>
-
 //Global provider
 static fiftyoneDegreesProvider provider;
 
@@ -17,6 +15,8 @@ const char *get_property(fiftyoneDegreesDataSet *dataSet, fiftyoneDegreesDeviceO
 const char **get_info(const char* ua_str){
     //Values we want to return
     const char *width, *height;
+    //Allocate enough mem for hte two dimensions
+    const char **info = malloc(sizeof(char *) * 2);
     //Init provider
     init_provider();
     //Data set
@@ -30,8 +30,6 @@ const char **get_info(const char* ua_str){
     //Get device size
     width = get_property(dataSet, offsets, "ScreenPixelsWidth");
     height = get_property(dataSet, offsets, "ScreenPixelsHeight");
-    //Allocate enough mem for hte two dimensions
-    const char **info = malloc(sizeof(char *) * 2);
     //Initialize the element of the two values array
     info[0] = width;
     info[1] = height;
