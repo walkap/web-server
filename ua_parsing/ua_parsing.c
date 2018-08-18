@@ -1,21 +1,58 @@
 #include "ua_parsing.h"
 
-static fiftyoneDegreesProvider provider;
-const char* mobileUserAgent = ("Mozilla/5.0 (iPhone; CPU iPhone OS 7_1 like Mac OS X) "
-                               "AppleWebKit/537.51.2 (KHTML, like Gecko) 'Version/7.0 Mobile/11D167 "
-                               "Safari/9537.53");
-static void reportDatasetInitStatus(
-        fiftyoneDegreesDataSetInitStatus status,
-        const char* fileName);
-const char* getPixelWidth(fiftyoneDegreesDataSet* dataSet, fiftyoneDegreesDeviceOffsets *offsets);
+#include <stdlib.h>
 
-int init_provider(const char* properties){
-    const char* fileName = "../ua_parsing/src/51Degrees-LiteV3.4.trie";
+//Global provider
+static fiftyoneDegreesProvider provider;
+
+int init_provider();
+const char *get_property(fiftyoneDegreesDataSet *dataSet, fiftyoneDegreesDeviceOffsets *offsets, char *property);
+
+/**
+ * This function get the device information about the screen size
+ * @param ua_str The user agent string should be passed
+ * @return Return a pointer to an array of string element 1 is the width size
+ * element 2 is the height size
+ */
+const char **get_info(const char* ua_str){
+    //Values we want to return
+    const char *width, *height;
+    //Init provider
+    init_provider();
+    //Data set
+    fiftyoneDegreesDataSet *dataSet = provider.active->dataSet;
+    //init the offset
+    fiftyoneDegreesDeviceOffsets *offsets = fiftyoneDegreesCreateDeviceOffsets(dataSet);
+    //set the offset to 1, the numbers of record in the array
+    offsets->size = 1;
+    //Sets the offsets structure passed to the method for the User-Agent provided (or use this provider.active->dataSet)
+    fiftyoneDegreesSetDeviceOffset(dataSet, ua_str, 0, offsets->firstOffset);
+    //Get device size
+    width = get_property(dataSet, offsets, "ScreenPixelsWidth");
+    height = get_property(dataSet, offsets, "ScreenPixelsHeight");
+    //Allocate enough mem for hte two dimensions
+    const char **info = malloc(sizeof(char *) * 2);
+    //Initialize the element of the two values array
+    info[0] = width;
+    info[1] = height;
+    //free memory, offset and data set
+    fiftyoneDegreesFreeDeviceOffsets(offsets);
+    return info;
+}
+
+/**
+ * Init the global provider with properties
+ * @param properties
+ * @return return 0 if init is ok
+ */
+int init_provider() {
+    const char *fileName = DATA_PATH;
+    const char *properties = PROPERTIES;
     //Init provider with property string
     fiftyoneDegreesDataSetInitStatus status =
-            fiftyoneDegreesInitProviderWithPropertyString(
-                    fileName, &provider, properties);
-    //Check the init status
+            //Initialises the provider using the file provided and a string of properties.
+            fiftyoneDegreesInitProviderWithPropertyString(fileName, &provider, properties);
+    //Check the init status and then return
     if (status != DATA_SET_INIT_STATUS_SUCCESS) {
         reportDatasetInitStatus(status, fileName);
         fgetc(stdin);
@@ -23,59 +60,31 @@ int init_provider(const char* properties){
     }
     return 0;
 }
-void parse_ua(const char *ua_string, fiftyoneDegreesDataSet* dataSet){
-    const char* pixelWidth;
-    fiftyoneDegreesDeviceOffsets *offsets;
-    offsets = fiftyoneDegreesCreateDeviceOffsets(dataSet);
-    offsets->size = 1;
-    fiftyoneDegreesSetDeviceOffset(provider.active->dataSet, ua_string, 0, offsets->firstOffset);
-    pixelWidth = getPixelWidth(dataSet, offsets);
-    printf("The width is: %s\n", pixelWidth);
-    fiftyoneDegreesFreeDeviceOffsets(offsets);
-}
-
-const char* getPixelWidth(fiftyoneDegreesDataSet* dataSet, fiftyoneDegreesDeviceOffsets *offsets){
-    int32_t requiredPropertyIndex;
-    const char* screenPixelWidth = NULL;
-    const char* property = "ScreenPixelsWidth";
-    requiredPropertyIndex = fiftyoneDegreesGetRequiredPropertyIndex(dataSet, property);
-    if (requiredPropertyIndex >= 0 &&
-        requiredPropertyIndex <
-        fiftyoneDegreesGetRequiredPropertiesCount(dataSet)) {
-        screenPixelWidth = fiftyoneDegreesGetValuePtrFromOffsets(
-                dataSet,
-                offsets,
-                requiredPropertyIndex);
-    }
-    return screenPixelWidth;
-}
-
-int main(int argc, char *argv[]){
-    init_provider("ScreenPixelsWidth");
-    parse_ua(mobileUserAgent,provider.active->dataSet);
-}
-
 
 /**
-* Reports the status of the data file initialization.
-*/
-static void reportDatasetInitStatus(fiftyoneDegreesDataSetInitStatus status,
-                                    const char* fileName) {
-    switch (status) {
-        case DATA_SET_INIT_STATUS_INSUFFICIENT_MEMORY:
-            printf("Insufficient memory to load '%s'.", fileName);
-            break;
-        case DATA_SET_INIT_STATUS_CORRUPT_DATA:
-            printf("Device data file '%s' is corrupted.", fileName);
-            break;
-        case DATA_SET_INIT_STATUS_INCORRECT_VERSION:
-            printf("Device data file '%s' is not correct version.", fileName);
-            break;
-        case DATA_SET_INIT_STATUS_FILE_NOT_FOUND:
-            printf("Device data file '%s' not found.", fileName);
-            break;
-        default:
-            printf("Device data file '%s' could not be loaded.", fileName);
-            break;
+ * Get the right property based on the argument property passed could be for example "ScreenPixelsWidth" or others
+ * @param dataSet The dataset already initialized
+ * @param offsets
+ * @param property The property we want to see
+ * @return A char pointer to the value of the property requested
+ */
+const char *get_property(fiftyoneDegreesDataSet *dataSet, fiftyoneDegreesDeviceOffsets *offsets, char *property){
+    int32_t requiredPropertyIndex;
+    const char *value = NULL;
+    //const char *property = "ScreenPixelsWidth";
+    //Returns the index in the array of required properties for this name, or -1 if not found.
+    requiredPropertyIndex = fiftyoneDegreesGetRequiredPropertyIndex(dataSet, property);
+    if (requiredPropertyIndex >= 0 && requiredPropertyIndex <
+                                      //Returns the number of properties that have been loaded in the dataset.
+                                      fiftyoneDegreesGetRequiredPropertiesCount(dataSet)) {
+        //Returns a pointer to the value for the property based on the device offsets provided.
+        value = fiftyoneDegreesGetValuePtrFromOffsets(dataSet, offsets, requiredPropertyIndex);
     }
+    return value;
+}
+
+//TODO this is just for testing should be deleted as soon as we can
+int main(int argc, char *argv[]) {
+    const char **value = get_info(mobileUserAgent);
+    printf("ciao %s", value[0]);
 }
