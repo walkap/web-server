@@ -1,11 +1,8 @@
 #include "image_processing.h"
 
 int resize_image(MagickBooleanType status, MagickWand *magick_wand, size_t height, size_t width);
-
 int compress_image(MagickBooleanType status, MagickWand *magick_wand, float_t quality);
-
 int write_image(MagickBooleanType status, MagickWand *magick_wand, char *filename);
-
 char *rename_file(const char *filename, size_t width, size_t height);
 
 /**
@@ -17,15 +14,11 @@ char *rename_file(const char *filename, size_t width, size_t height);
  * @param quality - Image's quality compression, set -1 if it doesn't required
  */
 
-//TODO the destination shouldn't be chosen but set from size
 int process_image(char *source, size_t width, size_t height, float_t quality) {
-
     //This rename the image as the formats wants image-widthxheight.jpg
     char *destination = rename_file(source, width, height);
-
     MagickBooleanType status;
     MagickWand *magick_wand;
-
     //Read an image.
     MagickWandGenesis();
     magick_wand = NewMagickWand();
@@ -34,14 +27,10 @@ int process_image(char *source, size_t width, size_t height, float_t quality) {
     if (status == MagickFalse) {
         ThrowWandException(magick_wand);
     }
-
     //Image resize
     resize_image(MagickFalse, magick_wand, height, width);
-
     //Image quality compression
     compress_image(status, magick_wand, quality);
-
-    //TODO need to concatenate widthxheight to filename and return the new filename,
     //Write the image then destroy it.
     write_image(status, magick_wand, destination);
     free(destination);
@@ -107,7 +96,6 @@ int write_image(MagickBooleanType status, MagickWand *magick_wand, char *filenam
     char *current_directory = current_dir();
     char *image_folder = concat(current_directory, "/images/");
     char *destination = concat(image_folder, filename);
-    //TODO we should think about the possibility to divide images processed in folders based on the image size
     status = MagickWriteImages(magick_wand, destination, MagickTrue);
     if (status == MagickFalse) {
         ThrowWandException(magick_wand);
@@ -151,7 +139,7 @@ char *rename_file(const char *filename, size_t width, size_t height) {
 
 //TODO we should think how to save memory declaring variable such as using unsigned int instead int and so on... See strutture 8.23 pellegrino principe
 
-//TODO this is just to try the process_image function, should be deleted as soon as we test it
+//TODO this is just for testing should be deleted as soon as we can
 int main() {
     //TODO we could use always strings as parameter they are simpler to transform to int or size_t and not vice versa
     process_image("scarpe.jpg", 600, 800, 0.5);
