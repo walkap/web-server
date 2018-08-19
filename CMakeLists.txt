@@ -9,7 +9,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread -Wall -Wextra -O2 -fopenmp -DMAGICK
 
 #define some constants
 set(TRIE ua_parsing/src/trie/51Degrees.c
-        ua_parsing/src/trie/51Degrees.h)
+        ua_parsing/src/trie/51Degrees.h cache/cache.h)
 
 set(CITYHASH
         ua_parsing/src/cityhash/city.c
