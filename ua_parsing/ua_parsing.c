@@ -3,6 +3,10 @@
 //Global provider
 static fiftyoneDegreesProvider provider;
 
+int init_provider();
+const char *get_property(fiftyoneDegreesDataSet *dataSet, fiftyoneDegreesDeviceOffsets *offsets, char *property);
+void reportDatasetInitStatus(fiftyoneDegreesDataSetInitStatus status, const char* fileName);
+
 /**
  * This function get the device information about the screen size
  * @param ua_str The user agent string should be passed
@@ -24,6 +28,7 @@ const char **get_info(const char* ua_str){
     offsets->size = 1;
     //Sets the offsets structure passed to the method for the User-Agent provided (or use this provider.active->dataSet)
     fiftyoneDegreesSetDeviceOffset(dataSet, ua_str, 0, offsets->firstOffset);
+    //TODO what if device size is not available?
     //Get device size
     width = get_property(dataSet, offsets, "ScreenPixelsWidth");
     height = get_property(dataSet, offsets, "ScreenPixelsHeight");
@@ -76,6 +81,30 @@ const char *get_property(fiftyoneDegreesDataSet *dataSet, fiftyoneDegreesDeviceO
         value = fiftyoneDegreesGetValuePtrFromOffsets(dataSet, offsets, requiredPropertyIndex);
     }
     return value;
+}
+
+/**
+* Reports the status of the data file initialization.
+*/
+void reportDatasetInitStatus(fiftyoneDegreesDataSetInitStatus status,
+                             const char* fileName) {
+    switch (status) {
+        case DATA_SET_INIT_STATUS_INSUFFICIENT_MEMORY:
+            printf("Insufficient memory to load '%s'.", fileName);
+            break;
+        case DATA_SET_INIT_STATUS_CORRUPT_DATA:
+            printf("Device data file '%s' is corrupted.", fileName);
+            break;
+        case DATA_SET_INIT_STATUS_INCORRECT_VERSION:
+            printf("Device data file '%s' is not correct version.", fileName);
+            break;
+        case DATA_SET_INIT_STATUS_FILE_NOT_FOUND:
+            printf("Device data file '%s' not found.", fileName);
+            break;
+        default:
+            printf("Device data file '%s' could not be loaded.", fileName);
+            break;
+    }
 }
 
 //TODO this is just for testing should be deleted as soon as we can
