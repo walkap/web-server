@@ -1,5 +1,10 @@
 #include "image_processing.h"
 
+void resize_image(MagickBooleanType status, MagickWand *magick_wand, size_t height, size_t width);
+void compress_image(MagickBooleanType status, MagickWand *magick_wand, float_t quality);
+void write_image(MagickBooleanType status, MagickWand *magick_wand, char *filename);
+char *rename_file(const char *filename, size_t width, size_t height);
+
 /**
  * This function resize an image as the name suggest
  * @param source - Image's filename before the resizing
@@ -84,6 +89,10 @@ void compress_image(MagickBooleanType status, MagickWand *magick_wand, float_t q
 void write_image(MagickBooleanType status, MagickWand *magick_wand, char *filename) {
     char *current_directory = current_dir();
     char *target = malloc(strlen(current_directory) + strlen("/images/") + strlen(filename) + 1);
+    if(target == NULL){
+        perror("malloc");
+        exit(EXIT_FAILURE);
+    }
     //Concatenate strings
     sprintf(target, "%s/images/%s", current_directory, filename);
     //Write the image on the file system
@@ -127,8 +136,6 @@ char *rename_file(const char *filename, size_t width, size_t height) {
     sprintf(newfilename + strlen(filename) - 4, "-%dx%d.jpg", (int) width, (int) height);
     return newfilename;
 }
-
-//TODO we should think how to save memory declaring variable such as using unsigned int instead int and so on... See strutture 8.23 pellegrino principe
 
 //TODO this is just for testing should be deleted as soon as we can
 int main() {
