@@ -8,9 +8,9 @@
 #include <ImageMagick-7/MagickWand/MagickWand.h>
 #include "../utils.h"
 
-int resize_image(MagickBooleanType status, MagickWand *magick_wand, size_t height, size_t width);
-int compress_image(MagickBooleanType status, MagickWand *magick_wand, float_t quality);
-int write_image(MagickBooleanType status, MagickWand *magick_wand, char *filename);
+void resize_image(MagickBooleanType status, MagickWand *magick_wand, size_t height, size_t width);
+void compress_image(MagickBooleanType status, MagickWand *magick_wand, float_t quality);
+void write_image(MagickBooleanType status, MagickWand *magick_wand, char *filename);
 char *rename_file(const char *filename, size_t width, size_t height);
 int process_image(char *source, size_t width, size_t height, float_t quality);
 

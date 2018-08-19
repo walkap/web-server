@@ -41,17 +41,15 @@ int process_image(char *source, size_t width, size_t height, float_t quality) {
  * @param magick_wand - the magick wand object associated to the image we want to resize
  * @param width - image's width
  * @param height - image's height
- * @return return 0 if success
  */
-int resize_image(MagickBooleanType status, MagickWand *magick_wand, size_t height, size_t width) {
+void resize_image(MagickBooleanType status, MagickWand *magick_wand, size_t height, size_t width) {
     //This is used to maintain ratio and avoid distortion
-    float_t aspect_ratio = (float_t) MagickGetImageWidth(magick_wand) / MagickGetImageHeight(magick_wand);
-    float_t new_ratio = (float_t) width / height;
+    float aspect_ratio = (float_t) MagickGetImageWidth(magick_wand) / MagickGetImageHeight(magick_wand);
+    float new_ratio = (float_t) width / height;
     //Check if the ratio it is the same as the values requested
     if (aspect_ratio != new_ratio) {
         height = (size_t) (width / aspect_ratio);
     }
-    //TODO we should check either if the image size requested it is not too short
     //Resize the image
     MagickResetIterator(magick_wand);
     while (MagickNextImage(magick_wand) != MagickFalse) {
@@ -60,7 +58,6 @@ int resize_image(MagickBooleanType status, MagickWand *magick_wand, size_t heigh
             ThrowWandException(magick_wand);
         }
     }
-    return (0);
 }
 
 /**
@@ -68,15 +65,14 @@ int resize_image(MagickBooleanType status, MagickWand *magick_wand, size_t heigh
  * @param status - MagickBooleanType
  * @param magick_wand - the magick wand object associated to the image we want to resize
  * @param quality - quality requested for the image we want to compress
- * @return returns 0 if success
  */
-int compress_image(MagickBooleanType status, MagickWand *magick_wand, float_t quality) {
+void compress_image(MagickBooleanType status, MagickWand *magick_wand, float_t quality) {
     //Compress the image
     status = MagickSetImageCompressionQuality(magick_wand, (size_t) quality * 100);
+    //Check the compressing status
     if (status == MagickFalse) {
         ThrowWandException(magick_wand);
     }
-    return (0);
 }
 
 /**
@@ -84,20 +80,20 @@ int compress_image(MagickBooleanType status, MagickWand *magick_wand, float_t qu
  * @param status - MagickBooleanType
  * @param magick_wand - the magick wand object associated to the image we want to resize
  * @param filename - the new name we want to associate to the processed image
- * @return returns 0 if success
  */
-int write_image(MagickBooleanType status, MagickWand *magick_wand, char *filename) {
-    //TODO it could be used sprintf just once instead two concat that uses two malloc
+void write_image(MagickBooleanType status, MagickWand *magick_wand, char *filename) {
     char *current_directory = current_dir();
-    char *image_folder = concat(current_directory, "/images/");
-    char *destination = concat(image_folder, filename);
-    status = MagickWriteImages(magick_wand, destination, MagickTrue);
+    char *target = malloc(strlen(current_directory) + strlen("/images/") + strlen(filename) + 1);
+    //Concatenate strings
+    sprintf(target, "%s/images/%s", current_directory, filename);
+    //Write the image on the file system
+    status = MagickWriteImages(magick_wand, target, MagickTrue);
+    //Check the writing status
     if (status == MagickFalse) {
         ThrowWandException(magick_wand);
     }
-    free(destination);
-    free(image_folder);
-    return (0);
+    //Free the memory allocated with malloc
+    free(target);
 }
 
 /**
