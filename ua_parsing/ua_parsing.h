@@ -6,6 +6,10 @@
 #define DATA_PATH "../ua_parsing/src/51Degrees-LiteV3.4.trie";
 #define PROPERTIES "ScreenPixelsWidth,ScreenPixelsHeight,PlatformName,IsMobile"
 
+int init_provider();
+const char *get_property(fiftyoneDegreesDataSet *dataSet, fiftyoneDegreesDeviceOffsets *offsets, char *property);
+const char **get_info(const char* ua_str);
+
 /**
 * Reports the status of the data file initialization.
 */

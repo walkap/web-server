@@ -3,9 +3,6 @@
 //Global provider
 static fiftyoneDegreesProvider provider;
 
-int init_provider();
-const char *get_property(fiftyoneDegreesDataSet *dataSet, fiftyoneDegreesDeviceOffsets *offsets, char *property);
-
 /**
  * This function get the device information about the screen size
  * @param ua_str The user agent string should be passed

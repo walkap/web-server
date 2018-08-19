@@ -1,10 +1,5 @@
 #include "image_processing.h"
 
-int resize_image(MagickBooleanType status, MagickWand *magick_wand, size_t height, size_t width);
-int compress_image(MagickBooleanType status, MagickWand *magick_wand, float_t quality);
-int write_image(MagickBooleanType status, MagickWand *magick_wand, char *filename);
-char *rename_file(const char *filename, size_t width, size_t height);
-
 /**
  * This function resize an image as the name suggest
  * @param source - Image's filename before the resizing
