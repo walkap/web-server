@@ -12,13 +12,16 @@ char *rename_file(const char *filename, size_t width, size_t height);
  * @param width - Image's widht we want to achieve
  * @param height - Image's width we want to achieve
  * @param quality - Image's quality compression, set -1 if it doesn't required
+ * @return A blob to the image file
  */
 
-int process_image(char *source, size_t width, size_t height, float_t quality) {
+unsigned char * process_image(char *source, size_t width, size_t height, float_t quality) {
     //This rename the image as the formats wants image-widthxheight.jpg
     char *destination = rename_file(source, width, height);
     MagickBooleanType status;
     MagickWand *magick_wand;
+    unsigned char * blob;
+    size_t blob_lenght;
     //Read an image.
     MagickWandGenesis();
     magick_wand = NewMagickWand();
@@ -29,14 +32,19 @@ int process_image(char *source, size_t width, size_t height, float_t quality) {
     }
     //Image resize
     resize_image(MagickFalse, magick_wand, height, width);
-    //Image quality compression
-    compress_image(status, magick_wand, quality);
+    //Check if quality value was set
+    if(quality != -1){
+        //Image quality compression
+        compress_image(status, magick_wand, quality);
+    }
+    //Get the blob to return
+    blob = MagickGetImageBlob(magick_wand, &blob_lenght);
     //Write the image then destroy it.
     write_image(status, magick_wand, destination);
     free(destination);
     DestroyMagickWand(magick_wand);
     MagickWandTerminus();
-    return (0);
+    return blob;
 }
 
 /**
