@@ -145,8 +145,10 @@ char *rename_file(const char *filename, size_t width, size_t height) {
     return newfilename;
 }
 
+#if IMAGE_PRO_DEBUG
 //TODO this is just for testing should be deleted as soon as we can
 int main() {
     //TODO we could use always strings as parameter they are simpler to transform to int or size_t and not vice versa
     process_image("scarpe.jpg", 600, 800, 0.5);
 }
+#endif
