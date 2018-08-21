@@ -1,0 +1,3 @@
+GET /wizard.jpg HTTP/1.1  2018-8-21 18:52:26   Mozilla/5.0   200 OK    28667
+GET /wizard.jpg HTTP/1.1  2018-8-21 18:52:28   Mozilla/5.0   200 OK    28667
+GET /wizard.jpg HTTP/1.1  2018-8-21 18:58:39   Mozilla/5.0   200 OK    28667
