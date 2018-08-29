@@ -35,7 +35,11 @@ find_package(ImageMagick COMPONENTS MagickWand)
 
 #Executables
 add_executable(main
-        server/server.c)
+        server/server.c
+        http_parsing/request_parser.h
+        http_parsing/request_parser.c
+        http_parsing/response_setter.h
+        utils.c http_parsing/response_setter.c logging/logging.c)
 
 add_executable(ua
         ${UA_PAR}
