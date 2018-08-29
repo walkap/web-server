@@ -39,7 +39,9 @@ add_executable(main
         http_parsing/request_parser.h
         http_parsing/request_parser.c
         http_parsing/response_setter.h
-        utils.c http_parsing/response_setter.c logging/logging.c)
+        utils.c http_parsing/response_setter.c
+        logging/logging.c
+        ${IMAGE_PRO})
 
 add_executable(ua
         ${UA_PAR}
@@ -48,4 +50,4 @@ add_executable(ua
 add_executable(adapt
         ${IMAGE_PRO})
 
-target_link_libraries(adapt ${ImageMagick_LIBRARIES})
+target_link_libraries(main ${ImageMagick_LIBRARIES})
