@@ -5,24 +5,6 @@
 /** lack */
 
 // definition of struct
-struct memCell {
-
-    // image title
-    char title[20];
-
-    // quality of the image
-    unsigned int quality;
-
-    // start in cache
-    char* pointer;
-
-    // length in cache
-    unsigned int length;
-
-    // time of last hit
-    time_t seconds;
-
-};
 
 // find the first empty byte and return the numbers of bytes from cache start (-1 for error)
 int findEmptyCache(char* cache, unsigned int cacheLength, struct memCell** cell){
@@ -100,7 +82,8 @@ int findLessUseful(char* cache, unsigned int cacheLength, size_t fileLength, str
 /** find less useful with bigger space */
 
 // insert one item in cache and return 1 for success (-1 for error)
-int cacheInsert(char* cache, unsigned int cacheLength, FILE *file, char* name, unsigned int qualityImage){
+int cacheInsert(char* cache, unsigned int cacheLength, FILE *file, char* name, double qualityImage,
+                                     int height, int width){
 
     // generate cellMem
     struct memCell cell;
@@ -113,6 +96,10 @@ int cacheInsert(char* cache, unsigned int cacheLength, FILE *file, char* name, u
     strcpy(cell.title, name);
 
     cell.length = fileLength;
+
+    cell.width = width;
+
+    cell.height = height;
 
     cell.quality = qualityImage;
 
@@ -155,14 +142,16 @@ int cacheInsert(char* cache, unsigned int cacheLength, FILE *file, char* name, u
 }
 
 // check if one item is in the cache
-int checkMemory(char* cache, unsigned int cacheLength, struct memCell** cell, char* name, unsigned int qualityImage){
+int checkMemory(char* cache, unsigned int cacheLength, struct memCell** cell, char* name, double qualityImage,
+        int height, int width){
 
     int sum = 0;
 
     struct memCell* cells = (struct memCell*) cache;
 
     for(unsigned int i = 0; i < cacheLength ; i += (cells -> length) + sizeof(struct memCell)){
-        if(*(cells -> title) != '\0' && *(cells -> title) == *name && cells -> quality == qualityImage){
+        if(*(cells -> title) != '\0' && *(cells -> title) == *name && cells -> quality == qualityImage
+                                                                      && cells -> height == height && cells->width == width){
 
             cells -> seconds = time(NULL);
             *cell = cells;
@@ -173,7 +162,9 @@ int checkMemory(char* cache, unsigned int cacheLength, struct memCell** cell, ch
         /* printf("control checkMemory i: %d\n", i); */
 
         cache += i;
+/*
         cells = (struct memCell*) cache;
+*/
 
         /* printf("control checkMemory cache: %p\n", cells); */
 

@@ -1,4 +1,9 @@
 #include "response_setter.h"
+#include "../cache/cache.h"
+#include "../ua_parsing/ua_parsing.h"
+#include "../image_processing/image_processing.h"
+
+char CACHE[200000];
 
 //TODO we should set the html root somehow so we can just use something like INDEX "index.html" insted the complete relative path
 //#define HTML_INDEX ".../www/index.html"
@@ -148,7 +153,7 @@ void html_content(const char *dest, char *fptr) {
 
 
 void build_response(struct http_request *req, int conn) {
-    char *fbuffer;
+    char *fbuffer =  NULL;
     char *response;
     int hlen;
     int lenght = 0;
@@ -180,22 +185,49 @@ void build_response(struct http_request *req, int conn) {
 
     } else if (strcmp(req->uri, "/wizard.jpg") == 0) {
 
-        //TODO check if image is present in cache
-
-        fbuffer = read_image(req->uri, &lenght);
-
+        char *p = CACHE;
         double q = parse_weight(req->accept);
-
         printf("\nimage quality: %.2f\n", q);
         fflush(stdout);
+        char *u_a = parse_user_agent(req->user_agent);
+        printf("\nuser agent: %s\n", u_a);
+        fflush(stdout);
+        const char **info = get_info(u_a);
+        int width = (int) info[0];
+        int height = (int) info[1];
 
-        //TODO modify image given weight q and User-Agent header line
+        printf("image heightxwidth %i %i", width, height);
+        struct memCell *cell = malloc(sizeof(struct memCell));
+        exit_on_error(cell == NULL, "error in malloc");
 
-        response = build_header(200, "image/gif", lenght, req->version);
+        if (checkMemory(p, 200000, &cell, req->uri, q, height, width) != -1) {
 
-        hlen = strlen(response);
+            char *img = malloc(50000);
+            exit_on_error(img == NULL, "error in malloc");
 
-        memcpy(buff, response, hlen);
+            memcpy(img, cell->pointer + sizeof(struct memCell), cell->length);
+
+            fbuffer = img;
+
+        } else {
+
+            char *img = read_image(req->uri, &lenght);
+
+            printf("IN Process\n");
+
+            fbuffer = process_image(img, width, height, q);
+
+            response = build_header(200, "image/gif", lenght, req->version);
+
+            hlen = strlen(response);
+
+            memcpy(buff, response, hlen);
+
+            printf("Inserting\n");
+
+            cacheInsert(p, 200000, (FILE *) fbuffer, req->uri, q,
+                        height, width);
+        }
 
     } else {
 

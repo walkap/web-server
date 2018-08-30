@@ -127,10 +127,10 @@ char *rename_file(const char *filename, size_t width, size_t height) {
         exit(EXIT_FAILURE);
     }
     //Check if size is too big
-    if (width > 9999 || height > 9999) {
+    /*if (width > 9999 || height > 9999) {
         printf("The image size should be <= 9999");
         exit(EXIT_FAILURE);
-    }
+    }*/
     //Initialize array char to contain the complete new filename and the format
     char *newfilename;
     newfilename = malloc(strlen(filename) + 11);

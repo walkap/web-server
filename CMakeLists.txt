@@ -40,7 +40,15 @@ add_executable(main
         http_parsing/request_parser.c
         http_parsing/response_setter.h
         utils.c http_parsing/response_setter.c
+        ua_parsing/ua_parsing.h
+        ua_parsing/ua_parsing.c
+        cache/cache.h
+        cache/cache.c
+        image_processing/image_processing.c
+        image_processing/image_processing.h
         logging/logging.c
+        ${UA_PAR}
+        ${TRIE}
         ${IMAGE_PRO})
 
 add_executable(ua

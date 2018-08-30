@@ -107,10 +107,11 @@ void reportDatasetInitStatus(fiftyoneDegreesDataSetInitStatus status,
     }
 }
 
-#if UA_PARSING_DEBUG
+/*#if UA_PARSING_DEBUG*/
 //TODO this is just for testing should be deleted as soon as we can
-int main(int argc, char *argv[]) {
+/*int main(int argc, char *argv[]) {
     const char **value = get_info(mobileUserAgent);
     printf("ciao %s", value[0]);
-}
-#endif
+}*/
+/*
+#endif*/

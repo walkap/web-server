@@ -21,15 +21,12 @@ double parse_weight(char *str) {
 }
 
 char *parse_user_agent(char *str) {
-    char *s = " ";
-    char *token;
 
-    token = strtok(str, s);
-    token = strtok(NULL, s);
+    char *newStr = str;
+    while (*(newStr++) != ' ') {}
 
 
-    return token;
-
+    return newStr;
 }
 
 void parse_request_line(struct http_request *r, char *t) {
@@ -60,7 +57,7 @@ void parse_request_line(struct http_request *r, char *t) {
 
 struct http_request *parse_request(char *str) {
     struct http_request *request;
-    const char s[2] = "\n";
+    const char s[3] = "\r\n";
     char *token;
 
     request = malloc(sizeof(struct http_request));

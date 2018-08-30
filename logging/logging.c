@@ -1,4 +1,4 @@
-#import "logging.h"
+#include "logging.h"
 
 FILE *open_logfile(char *s) {
     FILE *fptr;
