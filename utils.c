@@ -63,30 +63,3 @@ char *current_dir() {
     char *current_dir = getcwd(buffer, sizeof(buffer));
     return current_dir;
 }
-
-/**
- * This function concatenates two strings and returns a char pointer
- * to the complete string
- * @param s1 - the first string will at the start
- * @param s2 - the second string appended to the first one
- * @return char *
- */
-char *concat(char *s1, char *s2) {
-
-    char *target;
-
-    size_t len1 = strlen(s1);
-    size_t len2 = strlen(s2);
-
-    target = malloc(len1 + len2 + 1);
-
-    if (target == NULL) {
-        perror("malloc");
-        exit(EXIT_FAILURE);
-    }
-
-    memcpy(target, s1, len1);
-    memcpy(target + len1, s2, len2 + 1);
-
-    return target;
-}
