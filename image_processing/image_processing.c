@@ -48,14 +48,13 @@ void compress_image(MagickBooleanType status, MagickWand *magick_wand, float_t q
  * @param filename - the new name we want to associate to the processed image
  */
 void write_image(MagickBooleanType status, MagickWand *magick_wand, char *filename) {
-    char *current_directory = current_dir();
-    char *target = malloc(strlen(current_directory) + strlen("/images/") + strlen(filename) + 1);
+    char *target = malloc(strlen(IMAGE_DIR) + strlen(filename) + 1);
     if(target == NULL){
         perror("malloc");
         exit(EXIT_FAILURE);
     }
     //Concatenate strings
-    sprintf(target, "%s/images/%s", current_directory, filename);
+    sprintf(target, "%s%s", IMAGE_DIR, filename);
     //Write the image on the file system
     status = MagickWriteImages(magick_wand, target, MagickTrue);
     //Check the writing status
@@ -144,6 +143,6 @@ unsigned char * process_image(char *source, size_t width, size_t height, float_t
 //TODO this is just for testing should be deleted as soon as we can
 int main() {
     //TODO we could use always strings as parameter they are simpler to transform to int or size_t and not vice versa
-    process_image("scarpe.jpg", 600, 800, 0.5);
+    process_image("scarpe.jpg", 350, 400, 0.5);
 }
 #endif

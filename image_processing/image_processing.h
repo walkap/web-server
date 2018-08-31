@@ -10,6 +10,8 @@
 #include <ImageMagick-7/MagickWand/MagickWand.h>
 #include "../utils.h"
 
+#define IMAGE_DIR "../www/images/"
+
 #define ThrowWandException(wand){ \
   char *description; \
  \

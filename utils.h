@@ -24,9 +24,5 @@ char *HTML_INDEX;
 
 void exit_on_error (int condition, const char * message);
 int readn(int conn, char *ptr, int n);
-ssize_t writen(int fd, const void *buf, size_t n);
-//TODO we could get rid of it just using relative paths
-char *current_dir();
-char *concat(char *s1, char *s2);
 
 #endif //WEB_SERVER_UTILS_H
