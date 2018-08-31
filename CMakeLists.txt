@@ -9,7 +9,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread -Wall -Wextra -O2 -fopenmp -DMAGICK
 
 #define some constants
 set(TRIE ua_parsing/src/trie/51Degrees.c
-        ua_parsing/src/trie/51Degrees.h cache/cache.h cache/cache.c)
+        ua_parsing/src/trie/51Degrees.h)
 
 set(CITYHASH
         ua_parsing/src/cityhash/city.c
@@ -71,6 +71,9 @@ add_executable(ua
         ${TRIE})
 
 add_executable(adapt
-        ${IMAGE_PRO})
+        ${IMAGE_PRO}
+        ${UTILS})
 
 target_link_libraries(main ${ImageMagick_LIBRARIES})
+
+target_link_libraries(adapt ${ImageMagick_LIBRARIES})
