@@ -25,4 +25,3 @@
 unsigned char * process_image(char *source, size_t width, size_t height, float_t quality);
 
 #endif //WEB_SERVER_IMAGE_RESIZING_H
-

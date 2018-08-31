@@ -1,52 +1,5 @@
 #include "image_processing.h"
 
-void resize_image(MagickBooleanType status, MagickWand *magick_wand, size_t height, size_t width);
-void compress_image(MagickBooleanType status, MagickWand *magick_wand, float_t quality);
-void write_image(MagickBooleanType status, MagickWand *magick_wand, char *filename);
-char *rename_file(const char *filename, size_t width, size_t height);
-
-/**
- * This function resize an image as the name suggest
- * @param source - Image's filename before the resizing
- * @param destination - Image's filename after resizing
- * @param width - Image's widht we want to achieve
- * @param height - Image's width we want to achieve
- * @param quality - Image's quality compression, set -1 if it doesn't required
- * @return A blob to the image file
- */
-
-unsigned char * process_image(char *source, size_t width, size_t height, float_t quality) {
-    //This rename the image as the formats wants image-widthxheight.jpg
-    char *destination = rename_file(source, width, height);
-    MagickBooleanType status;
-    MagickWand *magick_wand;
-    unsigned char * blob;
-    size_t blob_lenght;
-    //Read an image.
-    MagickWandGenesis();
-    magick_wand = NewMagickWand();
-    //TODO we should set another source for images instead of the project's root -> the source should be chosen by the caller
-    status = MagickReadImage(magick_wand, source);
-    if (status == MagickFalse) {
-        ThrowWandException(magick_wand);
-    }
-    //Image resize
-    resize_image(MagickFalse, magick_wand, height, width);
-    //Check if quality value was set
-    if(quality != -1){
-        //Image quality compression
-        compress_image(status, magick_wand, quality);
-    }
-    //Get the blob to return
-    blob = MagickGetImageBlob(magick_wand, &blob_lenght);
-    //Write the image then destroy it.
-    write_image(status, magick_wand, destination);
-    free(destination);
-    DestroyMagickWand(magick_wand);
-    MagickWandTerminus();
-    return blob;
-}
-
 /**
  * This function resize an image besides check the aspect ratio and return a proper image
  * with new dimensions as requested
@@ -143,6 +96,48 @@ char *rename_file(const char *filename, size_t width, size_t height) {
     //Add the image size and formate to the new file name array char
     sprintf(newfilename + strlen(filename) - 4, "-%dx%d.jpg", (int) width, (int) height);
     return newfilename;
+}
+
+/**
+ * This function resize an image as the name suggest
+ * @param source - Image's filename before the resizing
+ * @param destination - Image's filename after resizing
+ * @param width - Image's widht we want to achieve
+ * @param height - Image's width we want to achieve
+ * @param quality - Image's quality compression, set -1 if it doesn't required
+ * @return A blob to the image file
+ */
+
+unsigned char * process_image(char *source, size_t width, size_t height, float_t quality) {
+    //This rename the image as the formats wants image-widthxheight.jpg
+    char *destination = rename_file(source, width, height);
+    MagickBooleanType status;
+    MagickWand *magick_wand;
+    unsigned char * blob;
+    size_t blob_lenght;
+    //Read an image.
+    MagickWandGenesis();
+    magick_wand = NewMagickWand();
+    //TODO we should set another source for images instead of the project's root -> the source should be chosen by the caller
+    status = MagickReadImage(magick_wand, source);
+    if (status == MagickFalse) {
+        ThrowWandException(magick_wand);
+    }
+    //Image resize
+    resize_image(MagickFalse, magick_wand, height, width);
+    //Check if quality value was set
+    if(quality != -1){
+        //Image quality compression
+        compress_image(status, magick_wand, quality);
+    }
+    //Get the blob to return
+    blob = MagickGetImageBlob(magick_wand, &blob_lenght);
+    //Write the image then destroy it.
+    write_image(status, magick_wand, destination);
+    free(destination);
+    DestroyMagickWand(magick_wand);
+    MagickWandTerminus();
+    return blob;
 }
 
 #if IMAGE_PRO_DEBUG
