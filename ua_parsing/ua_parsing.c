@@ -10,14 +10,14 @@ void reportDatasetInitStatus(fiftyoneDegreesDataSetInitStatus status, const char
 /**
  * This function get the device information about the screen size
  * @param ua_str The user agent string should be passed
- * @return Return a pointer to an array of string element 1 is the width size
- * element 2 is the height size
+ * @param info is used to save information device as an array of strings
+ * @return Returns 0 in case of success, 1 if the device size is unknown
  */
-const char **get_info(const char* ua_str){
+int get_info(const char *ua_str, const char **info) {
     //Values we want to return
     const char *width, *height;
     //Allocate enough mem for hte two dimensions
-    const char **info = malloc(sizeof(char *) * 2);
+    //const char **info = malloc(sizeof(char *) * 2);
     //Init provider
     init_provider();
     //Data set
@@ -32,12 +32,17 @@ const char **get_info(const char* ua_str){
     //Get device size
     width = get_property(dataSet, offsets, "ScreenPixelsWidth");
     height = get_property(dataSet, offsets, "ScreenPixelsHeight");
+    //Check if device size are available, if not then return 1
+    if(strcmp(width, UNKNOWN) == 0 || strcmp(height, UNKNOWN) == 0){
+        puts("The device size in unknown!");
+        return 1;
+    }
     //Initialize the element of the two values array
     info[0] = width;
     info[1] = height;
     //free memory, offset and data set
     fiftyoneDegreesFreeDeviceOffsets(offsets);
-    return info;
+    return 0;
 }
 
 /**
@@ -110,7 +115,12 @@ void reportDatasetInitStatus(fiftyoneDegreesDataSetInitStatus status,
 #if UA_PARSING_DEBUG
 //TODO this is just for testing should be deleted as soon as we can
 int main(int argc, char *argv[]) {
-    const char **value = get_info(mobileUserAgent);
-    printf("ciao %s", value[0]);
+    const char **info = malloc(sizeof(char *) * 2);
+    int value = get_info("User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:61.0) Gecko/20100101 Firefox/61.0", info);
+    //int value = get_info(mobileUserAgent, info);
+    if(value == 0){
+        printf("The image size is: %sx%s", info[0], info[1]);
+    }
+    return 0;
 }
 #endif
