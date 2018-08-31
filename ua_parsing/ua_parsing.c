@@ -28,7 +28,6 @@ int get_info(const char *ua_str, const char **info) {
     offsets->size = 1;
     //Sets the offsets structure passed to the method for the User-Agent provided (or use this provider.active->dataSet)
     fiftyoneDegreesSetDeviceOffset(dataSet, ua_str, 0, offsets->firstOffset);
-    //TODO what if device size is not available?
     //Get device size
     width = get_property(dataSet, offsets, "ScreenPixelsWidth");
     height = get_property(dataSet, offsets, "ScreenPixelsHeight");

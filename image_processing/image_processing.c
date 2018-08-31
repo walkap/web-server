@@ -117,7 +117,6 @@ unsigned char * process_image(char *source, size_t width, size_t height, float_t
     //Read an image.
     MagickWandGenesis();
     magick_wand = NewMagickWand();
-    //TODO we should set another source for images instead of the project's root -> the source should be chosen by the caller
     status = MagickReadImage(magick_wand, source);
     if (status == MagickFalse) {
         ThrowWandException(magick_wand);
