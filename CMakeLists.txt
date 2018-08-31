@@ -31,22 +31,37 @@ set(UA_PAR
         ua_parsing/ua_parsing.h
         ua_parsing/ua_parsing.c)
 
+set(HTTP_PARSE
+        http_parsing/request_parser.h
+        http_parsing/request_parser.c
+        http_parsing/response_setter.h
+        http_parsing/response_setter.c)
+
+set(CACHE
+        cache/cache.c
+        cache/cache.h)
+
+set(LOGGING
+        logging/logging.h
+        logging/logging.c)
+
+set(UTILS
+        utils.c
+        utils.h)
+
+set(SERVER
+        server/server.c
+        server/server.h)
+
 find_package(ImageMagick COMPONENTS MagickWand)
 
 #Executables
 add_executable(main
-        server/server.c
-        http_parsing/request_parser.h
-        http_parsing/request_parser.c
-        http_parsing/response_setter.h
-        utils.c http_parsing/response_setter.c
-        ua_parsing/ua_parsing.h
-        ua_parsing/ua_parsing.c
-        cache/cache.h
-        cache/cache.c
-        image_processing/image_processing.c
-        image_processing/image_processing.h
-        logging/logging.c
+        ${SERVER}
+        ${UTILS}
+        ${LOGGING}
+        ${CACHE}
+        ${HTTP_PARSE}
         ${UA_PAR}
         ${TRIE}
         ${IMAGE_PRO})
