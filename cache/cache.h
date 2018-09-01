@@ -13,8 +13,8 @@
 
 struct memCell;
 
-int cacheInsert(char* cache, unsigned int cacheLength, FILE *file, char* name, unsigned int qualityImage);
+int cacheInsert(char* cache, FILE *file, char* name, unsigned int qualityImage);
 
-int checkMemory(char* cache, unsigned int cacheLength, struct memCell** cell, char* name, unsigned int qualityImage);
+int checkMemory(char* cache, struct memCell** cell, char* name, unsigned int qualityImage);
 
 #endif //WEB_SERVER_CACHE_H
