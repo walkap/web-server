@@ -195,7 +195,7 @@ int cacheInsert(char* cache, void *file, char* name, unsigned int qualityImage, 
 }
 
 // check if one item is in the cache
-int checkMemory(char* cache, struct memCell** cell, char* name, unsigned int qualityImage){
+int checkMemory(char* cache, struct memCell** cell, char* name, unsigned int qualityImage, unsigned int imageLength, unsigned int imageWidth){
 
     unsigned int length = *((unsigned int*) (cache - sizeof(unsigned int)));
 
@@ -212,7 +212,7 @@ int checkMemory(char* cache, struct memCell** cell, char* name, unsigned int qua
         cache += i;
         cells = (struct memCell*) cache;
 
-        if(strcmp(cells -> title, name) == 0 && cells -> quality == qualityImage){
+        if(strcmp(cells -> title, name) == 0 && cells -> quality == qualityImage && cells -> imageLength == imageLength && cells -> imageWidth == imageWidth){
 
             //sleep(1);
 
