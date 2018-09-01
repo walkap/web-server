@@ -86,7 +86,7 @@ unsigned int findLessUseful(char* cache, size_t fileLength, struct memCell** cel
 
     }
 
-    printf("*** FINDLESSFUL ***\n");
+    //printf("*** FINDLESSFUL ***\n");
 
     for(unsigned int i = 0; i < length ; i += (cells -> next) + sizeof(struct memCell)){
 
@@ -95,11 +95,9 @@ unsigned int findLessUseful(char* cache, size_t fileLength, struct memCell** cel
 
         sum += i;
 
-        printf("control find lessUseful %p \ncell seconds: %ld\nlessUseful seconds: %ld\n", cache, cells -> seconds, lessUseful -> seconds);
+        //printf("control find lessUseful %p \ncell seconds: %ld\nlessUseful seconds: %ld\n", cache, cells -> seconds, lessUseful -> seconds);
 
         if(*(cells -> title) != '\0' && (cells -> next) >= fileLength && cells -> seconds < lessUseful -> seconds){
-
-            printf("*** HEY ***\n");
 
             lessUseful = cells;
             positionLessUseful = sum;
@@ -154,19 +152,19 @@ int cacheInsert(char* cache, void *file, char* name, unsigned int qualityImage, 
 
     // check for empty cell (change)
     int numberByte = findEmptyCell(cache, &emptyCell);
-    printf("control findEmptyCell numerByte: %d\n", numberByte);
+    //printf("control findEmptyCell numerByte: %d\n", numberByte);
 
     // find the cell to eliminate if the cell are full
     if(numberByte == -1){
 
         // find the less useful cache cell
         numberByte = findLessUseful(cache, fileLength, &emptyCell);
-        printf("control findLessUseful numerByte: %d\n", numberByte);
+        //printf("control findLessUseful numerByte: %d\n", numberByte);
 
         if(numberByte == -1){
 
             fprintf(stderr, "cache full and not useful find\n");
-            exit(EXIT_FAILURE);
+            return -1;
 
         }
 
@@ -177,9 +175,9 @@ int cacheInsert(char* cache, void *file, char* name, unsigned int qualityImage, 
     // insert pointer in cell
     cell.pointer = cache + numberByte;
 
-    printf("control cacheInsert cell.pointer : %p\n", cell.pointer);
+    //printf("control cacheInsert cell.pointer : %p\n", cell.pointer);
 
-    printf("control cacheInsert cell.seconds: %ld\n", cell.seconds);
+    //printf("control cacheInsert cell.seconds: %ld\n", cell.seconds);
 
     // insert struct in cache
     memcpy(cell.pointer, &cell, sizeof(struct memCell));
@@ -187,7 +185,7 @@ int cacheInsert(char* cache, void *file, char* name, unsigned int qualityImage, 
     // insert image in cache
     memcpy(cell.pointer + sizeof(struct memCell), file, fileLength);
 
-    printf("item insert with success\n");
+    //printf("item insert with success\n");
 
     // return value
     return 1;
