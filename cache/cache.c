@@ -4,35 +4,6 @@
 /* control */
 /** lack */
 
-// definition of struct
-struct memory_cell {
-
-    // image title
-    char title[20];
-
-    // quality of the image
-    unsigned int quality;
-
-    // start in buff
-    char* pointer;
-
-    // length in buff
-    unsigned int length;
-
-    // next item
-    unsigned int next;
-
-    // time of last hit
-    time_t seconds;
-
-    // image length
-    unsigned int imageLength;
-
-    // image width
-    unsigned int imageWidth;
-
-};
-
 // find the first empty byte and return the numbers of bytes from cache start (-1 for error)
 int find_empty_cell(char *cache, struct memory_cell **cell){
 
