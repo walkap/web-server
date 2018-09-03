@@ -227,3 +227,23 @@ int checkMemory(char* cache, struct memCell** cell, char* name, unsigned int qua
     return -1;
 
 }
+
+int initializeCache(size_t numb, char** cache){
+
+    unsigned int length = numb * getpagesize();
+
+    // create cache pointer and calloc
+    *cache = (char*) calloc(1, length);
+
+    if(!*cache){
+        return -1;
+
+    }
+
+    *((unsigned int*) *cache) = length - sizeof(unsigned int);
+
+    *cache += sizeof(unsigned int);
+
+    return 1;
+
+}
