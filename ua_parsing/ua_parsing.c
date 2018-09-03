@@ -3,9 +3,73 @@
 //Global provider
 static fiftyoneDegreesProvider provider;
 
-int init_provider();
-const char *get_property(fiftyoneDegreesDataSet *dataSet, fiftyoneDegreesDeviceOffsets *offsets, char *property);
-void reportDatasetInitStatus(fiftyoneDegreesDataSetInitStatus status, const char* fileName);
+/**
+ * Get the right property based on the argument property passed could be for example "ScreenPixelsWidth" or others
+ * @param dataSet The dataset already initialized
+ * @param offsets
+ * @param property The property we want to see
+ * @return A char pointer to the value of the property requested
+ */
+const char *get_property(fiftyoneDegreesDataSet *dataSet, fiftyoneDegreesDeviceOffsets *offsets, char *property){
+    int32_t requiredPropertyIndex;
+    const char *value = NULL;
+    //const char *property = "ScreenPixelsWidth";
+    //Returns the index in the array of required properties for this name, or -1 if not found.
+    requiredPropertyIndex = fiftyoneDegreesGetRequiredPropertyIndex(dataSet, property);
+    if (requiredPropertyIndex >= 0 && requiredPropertyIndex <
+                                      //Returns the number of properties that have been loaded in the dataset.
+                                      fiftyoneDegreesGetRequiredPropertiesCount(dataSet)) {
+        //Returns a pointer to the value for the property based on the device offsets provided.
+        value = fiftyoneDegreesGetValuePtrFromOffsets(dataSet, offsets, requiredPropertyIndex);
+    }
+    return value;
+}
+
+/**
+ * Reports the status of the data file initialization.
+ * @param status
+ * @param fileName
+ */
+void reportDatasetInitStatus(fiftyoneDegreesDataSetInitStatus status, const char* fileName) {
+    switch (status) {
+        case DATA_SET_INIT_STATUS_INSUFFICIENT_MEMORY:
+            printf("Insufficient memory to load '%s'.", fileName);
+            break;
+        case DATA_SET_INIT_STATUS_CORRUPT_DATA:
+            printf("Device data file '%s' is corrupted.", fileName);
+            break;
+        case DATA_SET_INIT_STATUS_INCORRECT_VERSION:
+            printf("Device data file '%s' is not correct version.", fileName);
+            break;
+        case DATA_SET_INIT_STATUS_FILE_NOT_FOUND:
+            printf("Device data file '%s' not found.", fileName);
+            break;
+        default:
+            printf("Device data file '%s' could not be loaded.", fileName);
+            break;
+    }
+}
+
+/**
+ * Init the global provider with properties
+ * @param properties
+ * @return return 0 if init is ok
+ */
+int init_provider() {
+    const char *fileName = DATA_PATH;
+    const char *properties = PROPERTIES;
+    //Init provider with property string
+    fiftyoneDegreesDataSetInitStatus status =
+            //Initialises the provider using the file provided and a string of properties.
+            fiftyoneDegreesInitProviderWithPropertyString(fileName, &provider, properties);
+    //Check the init status and then return
+    if (status != DATA_SET_INIT_STATUS_SUCCESS) {
+        reportDatasetInitStatus(status, fileName);
+        fgetc(stdin);
+        return 1;
+    }
+    return 0;
+}
 
 /**
  * This function get the device information about the screen size
@@ -42,73 +106,6 @@ int get_info(const char *ua_str, const char **info) {
     //free memory, offset and data set
     fiftyoneDegreesFreeDeviceOffsets(offsets);
     return 0;
-}
-
-/**
- * Init the global provider with properties
- * @param properties
- * @return return 0 if init is ok
- */
-int init_provider() {
-    const char *fileName = DATA_PATH;
-    const char *properties = PROPERTIES;
-    //Init provider with property string
-    fiftyoneDegreesDataSetInitStatus status =
-            //Initialises the provider using the file provided and a string of properties.
-            fiftyoneDegreesInitProviderWithPropertyString(fileName, &provider, properties);
-    //Check the init status and then return
-    if (status != DATA_SET_INIT_STATUS_SUCCESS) {
-        reportDatasetInitStatus(status, fileName);
-        fgetc(stdin);
-        return 1;
-    }
-    return 0;
-}
-
-/**
- * Get the right property based on the argument property passed could be for example "ScreenPixelsWidth" or others
- * @param dataSet The dataset already initialized
- * @param offsets
- * @param property The property we want to see
- * @return A char pointer to the value of the property requested
- */
-const char *get_property(fiftyoneDegreesDataSet *dataSet, fiftyoneDegreesDeviceOffsets *offsets, char *property){
-    int32_t requiredPropertyIndex;
-    const char *value = NULL;
-    //const char *property = "ScreenPixelsWidth";
-    //Returns the index in the array of required properties for this name, or -1 if not found.
-    requiredPropertyIndex = fiftyoneDegreesGetRequiredPropertyIndex(dataSet, property);
-    if (requiredPropertyIndex >= 0 && requiredPropertyIndex <
-                                      //Returns the number of properties that have been loaded in the dataset.
-                                      fiftyoneDegreesGetRequiredPropertiesCount(dataSet)) {
-        //Returns a pointer to the value for the property based on the device offsets provided.
-        value = fiftyoneDegreesGetValuePtrFromOffsets(dataSet, offsets, requiredPropertyIndex);
-    }
-    return value;
-}
-
-/**
-* Reports the status of the data file initialization.
-*/
-void reportDatasetInitStatus(fiftyoneDegreesDataSetInitStatus status,
-                             const char* fileName) {
-    switch (status) {
-        case DATA_SET_INIT_STATUS_INSUFFICIENT_MEMORY:
-            printf("Insufficient memory to load '%s'.", fileName);
-            break;
-        case DATA_SET_INIT_STATUS_CORRUPT_DATA:
-            printf("Device data file '%s' is corrupted.", fileName);
-            break;
-        case DATA_SET_INIT_STATUS_INCORRECT_VERSION:
-            printf("Device data file '%s' is not correct version.", fileName);
-            break;
-        case DATA_SET_INIT_STATUS_FILE_NOT_FOUND:
-            printf("Device data file '%s' not found.", fileName);
-            break;
-        default:
-            printf("Device data file '%s' could not be loaded.", fileName);
-            break;
-    }
 }
 
 #if UA_PARSING_DEBUG
