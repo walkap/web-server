@@ -1,7 +1,4 @@
 #include "response_setter.h"
-#include "../cache/cache.h"
-#include "../ua_parsing/ua_parsing.h"
-#include "../image_processing/image_processing.h"
 
 char CACHE[200000];
 
@@ -87,28 +84,6 @@ char *build_header(int status, char *type, int len, char *version) {
 }
 
 /**
- * Returns the size of the content of the file
- * @param fd file descriptor
- * @return  off_t the offset of the file
- */
-//TODO this could be shared with the whole project
-off_t get_file_size(int fd) {
-    int stat;
-    struct stat info;
-
-    //Get file info and save into the struct created
-    stat = fstat(fd, &info);
-    if (stat == -1) {
-        perror("fstat()");
-        exit(EXIT_FAILURE);
-    }
-    //Get the result
-    off_t size = info.st_size;
-
-    return size;
-}
-
-/**
  * Copies the content of a file in a char *
  * @param destination buffer where copy the file content
  * @param fptr file path
@@ -150,7 +125,6 @@ void html_content(const char *dest, char *fptr) {
     //Free memory
     free(html);
 }
-
 
 void build_response(struct http_request *req, int conn) {
     char *fbuffer =  NULL;

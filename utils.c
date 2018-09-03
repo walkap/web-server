@@ -20,7 +20,6 @@ int readn(int conn, char *ptr, int n) {
 
     nleft = n;
 
-
     while (nleft > 0) {
         fflush(stdout);
         if ((readn = recv(conn, ptr, nleft, 0)) >
@@ -51,4 +50,26 @@ ssize_t writen(int fd, const void *buf, size_t n) {
         nwritten = -1;
     }
     return nwritten;
+}
+
+/**
+ * Returns the size of the content of the file
+ * @param fd file descriptor
+ * @return  off_t the offset of the file
+ */
+//TODO this could be shared with the whole project
+off_t get_file_size(int fd) {
+    int stat;
+    struct stat info;
+
+    //Get file info and save into the struct created
+    stat = fstat(fd, &info);
+    if (stat == -1) {
+        perror("fstat()");
+        exit(EXIT_FAILURE);
+    }
+    //Get the result
+    off_t size = info.st_size;
+
+    return size;
 }
