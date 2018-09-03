@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <time.h>
 
-struct memCell {
+struct memory_cell {
 
     // image title
     char title[20];
@@ -35,10 +35,12 @@ struct memCell {
 
 };
 
-int initializeCache(size_t numb, char** cache);
+int initialize_cache(size_t numb, char **cache);
 
-int cacheInsert(char* cache, void *file, char* name, unsigned int qualityImage, unsigned int imageLength, unsigned int imageWidth);
+int cache_insert(char *cache, void *file, char *name, unsigned int qualityImage, unsigned int imageLength,
+                 unsigned int imageWidth);
 
-int checkMemory(char* cache, struct memCell** cell, char* name, unsigned int qualityImage, unsigned int imageLength, unsigned int imageWidth);
+int check_memory(char *cache, struct memory_cell **cell, char *name, unsigned int qualityImage,
+                 unsigned int imageLength, unsigned int imageWidth);
 
 #endif //WEB_SERVER_CACHE_H
