@@ -4,10 +4,9 @@
 #include "request_parser.h"
 #include "../utils.h"
 #include "../logging/logging.h"
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <sys/stat.h>
+#include "../cache/cache.h"
+#include "../ua_parsing/ua_parsing.h"
+#include "../image_processing/image_processing.h"
 
 //Definitions
 void write_response(char *response, int len, int conn, struct http_request *pt);

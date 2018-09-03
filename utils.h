@@ -14,6 +14,13 @@
 #include <stropts.h>
 #include <arpa/inet.h>
 #include <ctype.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <string.h>
+#include <time.h>
+
+#include <ImageMagick-7/MagickWand/MagickWand.h>
 
 #define DIM_HEADER 300
 
@@ -24,5 +31,6 @@ char *HTML_INDEX;
 
 void exit_on_error (int condition, const char * message);
 int readn(int conn, char *ptr, int n);
+off_t get_file_size(int fd);
 
 #endif //WEB_SERVER_UTILS_H

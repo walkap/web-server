@@ -1,11 +1,7 @@
 #ifndef WEB_SERVER_CACHE_H
 #define WEB_SERVER_CACHE_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <time.h>
+#include "../utils.h"
 
 struct memory_cell {
 
