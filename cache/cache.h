@@ -7,36 +7,40 @@
 #include <unistd.h>
 #include <time.h>
 
-// comment
-/* control */
-/** lack */
-
-struct memCell {
+struct memory_cell {
 
     // image title
     char title[20];
 
     // quality of the image
-    double quality;
+    unsigned int quality;
 
-    int height;
-
-    int width;
-
-    // start in cache
+    // start in buff
     char* pointer;
 
-    // length in cache
+    // length in buff
     unsigned int length;
+
+    // next item
+    unsigned int next;
 
     // time of last hit
     time_t seconds;
 
+    // image length
+    unsigned int imageLength;
+
+    // image width
+    unsigned int imageWidth;
+
 };
 
+int initialize_cache(size_t numb, char **cache);
 
-int cacheInsert(char* cache, unsigned int cacheLength, FILE *file, char* name, double qualityImage,
-                int height, int width);
-int checkMemory(char* cache, unsigned int cacheLength, struct memCell** cell, char* name, double qualityImage,
-                int height, int width);
+int cache_insert(char *cache, void *file, char *name, unsigned int qualityImage, unsigned int imageLength,
+                 unsigned int imageWidth);
+
+int check_memory(char *cache, struct memory_cell **cell, char *name, unsigned int qualityImage,
+                 unsigned int imageLength, unsigned int imageWidth);
+
 #endif //WEB_SERVER_CACHE_H

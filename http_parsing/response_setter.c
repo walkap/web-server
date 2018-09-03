@@ -197,15 +197,15 @@ void build_response(struct http_request *req, int conn) {
         int height = (int) info[1];
 
         printf("image heightxwidth %i %i", width, height);
-        struct memCell *cell = malloc(sizeof(struct memCell));
+        struct memory_cell *cell = malloc(sizeof(struct memory_cell));
         exit_on_error(cell == NULL, "error in malloc");
 
-        if (checkMemory(p, 200000, &cell, req->uri, q, height, width) != -1) {
+        if (check_memory(p, 200000, &cell, req->uri, q, height, width) != -1) {
 
             char *img = malloc(50000);
             exit_on_error(img == NULL, "error in malloc");
 
-            memcpy(img, cell->pointer + sizeof(struct memCell), cell->length);
+            memcpy(img, cell->pointer + sizeof(struct memory_cell), cell->length);
 
             fbuffer = img;
 
@@ -225,8 +225,8 @@ void build_response(struct http_request *req, int conn) {
 
             printf("Inserting\n");
 
-            cacheInsert(p, 200000, (FILE *) fbuffer, req->uri, q,
-                        height, width);
+            cache_insert(p, 200000, (FILE *) fbuffer, req->uri, q,
+                         height, width);
         }
 
     } else {
