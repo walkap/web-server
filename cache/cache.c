@@ -95,7 +95,7 @@ unsigned int find_less_useful(char *cache, size_t fileLength, struct memory_cell
 /** find less useful with bigger space */
 
 // insert one item in cache and return 1 for success (-1 for error)
-int cache_insert(char *cache, void *file, char *name, unsigned int qualityImage, unsigned int imageLength,
+int cache_insert(char *cache, void *file, char *name, double qualityImage, unsigned int imageLength,
                  unsigned int imageWidth){
 
     // generate cellMem
@@ -165,8 +165,8 @@ int cache_insert(char *cache, void *file, char *name, unsigned int qualityImage,
 }
 
 // check if one item is in the cache
-int check_memory(char *cache, struct memory_cell **cell, char *name, unsigned int qualityImage,
-                 unsigned int imageLength, unsigned int imageWidth){
+int cache_check(char *cache, struct memory_cell **cell, char *name, double qualityImage,
+                unsigned int imageLength, unsigned int imageWidth){
 
     unsigned int length = *((unsigned int*) (cache - sizeof(unsigned int)));
 
@@ -174,11 +174,11 @@ int check_memory(char *cache, struct memory_cell **cell, char *name, unsigned in
 
     for(unsigned int i = 0; i < length ; i += (cells -> next) + sizeof(struct memory_cell)){
 
-        //printf("control check_memory cell title: %s\n", cells -> title);
-        //printf("control check_memory title: %s\n", name);
-        //printf("control check_memory cell quality: %u\n", cells -> quality);
-        //printf("control check_memory cell quality: %u\n", qualityImage);
-        //printf("control check_memory cache: %p\n", cells);
+        //printf("control cache_check cell title: %s\n", cells -> title);
+        //printf("control cache_check title: %s\n", name);
+        //printf("control cache_check cell quality: %u\n", cells -> quality);
+        //printf("control cache_check cell quality: %u\n", qualityImage);
+        //printf("control cache_check cache: %p\n", cells);
 
         cache += i;
         cells = (struct memory_cell*) cache;
@@ -193,7 +193,7 @@ int check_memory(char *cache, struct memory_cell **cell, char *name, unsigned in
 
         }
 
-        //printf("control check_memory i: %d\n", i);
+        //printf("control cache_check i: %d\n", i);
 
     }
 
@@ -201,7 +201,7 @@ int check_memory(char *cache, struct memory_cell **cell, char *name, unsigned in
 
 }
 
-int initialize_cache(size_t numb, char **cache){
+int cache_initialize(size_t numb, char **cache){
 
     unsigned int length = numb * getpagesize();
 

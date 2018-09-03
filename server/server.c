@@ -133,6 +133,17 @@ void run_server(int *listensd) {
 
     struct thread_data *td = alloc_thread_data();
 
+    unsigned int pages = 10;
+
+    char* cache;
+
+    if(cache_initialize(pages, &cache) == -1){
+        fprintf(stdout, "error in cache_initialize\n");
+
+    }
+
+    // TODO pass the cache pointer to the thread
+
     printf("Server started at http://localhost:8000/index.html\n");
     printf("------Waiting for requests------\n");
     fflush(stdout);

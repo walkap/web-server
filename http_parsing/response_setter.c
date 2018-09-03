@@ -174,12 +174,12 @@ void build_response(struct http_request *req, int conn) {
         struct memory_cell *cell = malloc(sizeof(struct memory_cell));
         exit_on_error(cell == NULL, "error in malloc");
 
-        if (check_memory(p, 200000, &cell, req->uri, q, height, width) != -1) {
+        if (cache_check(p, &cell, req->uri, q, height, width) != -1) {
 
             char *img = malloc(50000);
             exit_on_error(img == NULL, "error in malloc");
 
-            memcpy(img, cell->pointer + sizeof(struct memory_cell), cell->length);
+            memcpy(img, cell->pointer, cell->length);
 
             fbuffer = img;
 
@@ -199,7 +199,7 @@ void build_response(struct http_request *req, int conn) {
 
             printf("Inserting\n");
 
-            cache_insert(p, 200000, (FILE *) fbuffer, req->uri, q,
+            cache_insert(p, (void *) fbuffer, req->uri, q,
                          height, width);
         }
 

@@ -9,7 +9,7 @@ struct memory_cell {
     char title[20];
 
     // quality of the image
-    unsigned int quality;
+    double quality;
 
     // start in buff
     char* pointer;
@@ -31,12 +31,12 @@ struct memory_cell {
 
 };
 
-int initialize_cache(size_t numb, char **cache);
+int cache_initialize(size_t numb, char **cache);
 
-int cache_insert(char *cache, void *file, char *name, unsigned int qualityImage, unsigned int imageLength,
+int cache_insert(char *cache, void *file, char *name, double qualityImage, unsigned int imageLength,
                  unsigned int imageWidth);
 
-int check_memory(char *cache, struct memory_cell **cell, char *name, unsigned int qualityImage,
-                 unsigned int imageLength, unsigned int imageWidth);
+int cache_check(char *cache, struct memory_cell **cell, char *name, double qualityImage,
+                unsigned int imageLength, unsigned int imageWidth);
 
 #endif //WEB_SERVER_CACHE_H
