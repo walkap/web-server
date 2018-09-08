@@ -23,6 +23,8 @@
 #include <ImageMagick-7/MagickWand/MagickWand.h>
 
 #define DIM_HEADER 300
+#define N_PAGES 100
+
 #define IMAGE_DIR "../www/images"
 
 //TODO html should be in a proper html page
