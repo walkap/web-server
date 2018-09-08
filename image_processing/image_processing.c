@@ -174,11 +174,8 @@ unsigned char * process_image(char *source, size_t width, size_t height, float_t
 }
 
 #if IMAGE_PRO_DEBUG
-//TODO this is just for testing should be deleted as soon as we can
 int main() {
     size_t *imgsize = malloc(sizeof(size_t));
-
-    //TODO we could use always strings as parameter they are simpler to transform to int or size_t and not vice versa
     process_image("/scarpe.jpg", 207, 500, 0.5, imgsize);
 }
 #endif

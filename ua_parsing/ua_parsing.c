@@ -117,7 +117,6 @@ int get_info(const char *ua_str, const char **info) {
 }
 
 #if UA_PARSING_DEBUG
-//TODO this is just for testing should be deleted as soon as we can
 int main(int argc, char *argv[]) {
     const char **info = malloc(sizeof(char *) * 2);
     int value = get_info("User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:61.0) Gecko/20100101 Firefox/61.0", info);
