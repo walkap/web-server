@@ -8,14 +8,21 @@
  * @param width - image's width
  * @param height - image's height
  */
-void resize_image(MagickBooleanType status, MagickWand *magick_wand, size_t height, size_t width) {
+void resize_image(MagickBooleanType status, MagickWand *magick_wand, size_t width, size_t height) {
+    size_t original_width = MagickGetImageWidth(magick_wand);
+    size_t original_height = MagickGetImageHeight(magick_wand);
+    float aspect_ratio, new_aspect_ratio;
+
+    //TODO this should not be replicated it should be in a external function, see also rename_image
     //This is used to maintain ratio and avoid distortion
-    float aspect_ratio = (float_t) MagickGetImageWidth(magick_wand) / MagickGetImageHeight(magick_wand);
-    float new_ratio = (float_t) width / height;
+    aspect_ratio = (float_t) original_width / original_height;
+    new_aspect_ratio = (float_t) width / height;
+
     //Check if the ratio it is the same as the values requested
-    if (aspect_ratio != new_ratio) {
+    if (aspect_ratio != new_aspect_ratio) {
         height = (size_t) (width / aspect_ratio);
     }
+
     //Resize the image
     MagickResetIterator(magick_wand);
     while (MagickNextImage(magick_wand) != MagickFalse) {
@@ -72,7 +79,24 @@ void write_image(MagickBooleanType status, MagickWand *magick_wand, char *filena
  * @param height
  * @return - char * returns a pointer to the new name
  */
-char *rename_file(const char *filename, size_t width, size_t height) {
+char *rename_file(const char *filename, size_t width, size_t height, MagickWand *magick_wand) {
+    char *newfilename;
+
+    //Check the aspect ratio
+    size_t original_width = MagickGetImageWidth(magick_wand);
+    size_t original_height = MagickGetImageHeight(magick_wand);
+
+    float original_aspect_ratio, new_aspect_ratio;
+
+    //This is used to maintain ratio and avoid distortion
+    original_aspect_ratio = (float_t) original_width / original_height;
+    new_aspect_ratio = (float_t) width / height;
+
+    //Check if the ratio it is the same as the values requested
+    if (original_aspect_ratio != new_aspect_ratio) {
+        height = (size_t) (width / original_aspect_ratio);
+    }
+    
     //Check if the image size is equal to zero
     if (width == 0 || height == 0) {
         printf("The image size is zero");
@@ -84,7 +108,6 @@ char *rename_file(const char *filename, size_t width, size_t height) {
         exit(EXIT_FAILURE);
     }
     //Initialize array char to contain the complete new filename and the format
-    char *newfilename;
     newfilename = calloc(strlen(filename), (sizeof(char)));
     if(newfilename == NULL){
         perror("malloc");
@@ -92,11 +115,9 @@ char *rename_file(const char *filename, size_t width, size_t height) {
     }
     //Copy the file name without the format into the array char
     strncpy(newfilename, filename, strlen(filename) - 4);
-    printf("newfilename %s\n", newfilename);
 
     //Add the image size and formate to the new file name array char
     sprintf(newfilename + strlen(filename) - 4, "-%ix%i.jpg", (int) width, (int) height);
-    printf("newfilename %s\n", newfilename);
     return newfilename;
 }
 
@@ -109,37 +130,41 @@ char *rename_file(const char *filename, size_t width, size_t height) {
  * @param quality - Image's quality compression, set -1 if it doesn't required
  * @return A blob to the image file
  */
-
 unsigned char * process_image(char *source, size_t width, size_t height, float_t quality, size_t* newsize) {
-    //This rename the image as the formats wants image-widthxheight.jpg
-    char *destination = rename_file(source, width, height);
+    unsigned char * blob;
+    char *path, *destination;
     MagickBooleanType status;
     MagickWand *magick_wand;
-    unsigned char * blob;
+
     //Read an image.
     MagickWandGenesis();
     magick_wand = NewMagickWand();
 
-    char *path = malloc(sizeof(char *) * (strlen(IMAGE_DIR) + strlen(source) + 1));
+    //Allocate enough memory for image path
+    path = malloc(sizeof(char *) * (strlen(IMAGE_DIR) + strlen(source) + 1));
     if(path == NULL){
         perror("Malloc");
         exit(EXIT_FAILURE);
     }
+    //Concatenates relative path with image name
     sprintf(path, "%s%s", IMAGE_DIR, source);
     status = MagickReadImage(magick_wand, path);
     if (status == MagickFalse) {
         ThrowWandException(magick_wand);
     }
     //Image resize
-    resize_image(MagickFalse, magick_wand, height, width);
+    resize_image(MagickFalse, magick_wand, width, height);
     //Check if quality value was set
     if(quality != -1){
         //Image quality compression
         compress_image(status, magick_wand, quality);
     }
-
     //Get the blob to return
     blob = MagickGetImageBlob(magick_wand, newsize);
+
+    //This rename the image as the formats wants image-widthxheight.jpg
+    destination = rename_file(source, width, height, magick_wand);
+
     //Write the image then destroy it.
     write_image(status, magick_wand, destination);
     free(destination);
@@ -151,7 +176,9 @@ unsigned char * process_image(char *source, size_t width, size_t height, float_t
 #if IMAGE_PRO_DEBUG
 //TODO this is just for testing should be deleted as soon as we can
 int main() {
+    size_t *imgsize = malloc(sizeof(size_t));
+
     //TODO we could use always strings as parameter they are simpler to transform to int or size_t and not vice versa
-    process_image("wizard.jpg", 350, 400, 0.5);
+    process_image("/scarpe.jpg", 207, 500, 0.5, imgsize);
 }
 #endif

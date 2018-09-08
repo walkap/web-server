@@ -96,8 +96,6 @@ int get_info(const char *ua_str, const char **info) {
     width = get_property(dataSet, offsets, "ScreenPixelsWidth");
     height = get_property(dataSet, offsets, "ScreenPixelsHeight");
 
-    printf("UAPARSING \nwidth: %s\n height: %s\n", width, height);
-
     //Check if device size are available, if not then return 1
     if(strcmp(width, UNKNOWN) == 0 || strcmp(height, UNKNOWN) == 0){
         puts("The device size in unknown!");
