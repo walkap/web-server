@@ -3,7 +3,7 @@
 
 #include "../utils.h"
 
-#define IMAGE_PRO_DEBUG 1
+#define IMAGE_PRO_DEBUG 0
 
 
 #define ThrowWandException(wand){ \
