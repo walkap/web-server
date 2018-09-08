@@ -9,9 +9,9 @@
 #include "../image_processing/image_processing.h"
 
 //Definitions
-void write_response(char *response, int len, int conn, struct http_request *pt);
+void write_response(char *response, size_t lenght, int conn, struct http_request *pt);
 char *read_image(char *str2, int *len);
-char *build_header(int status, char *type, int len, char *version);
+char *build_header(int status, char *type, size_t len, char *version);
 off_t get_file_size(int fd);
 void html_content(const char *dest, char *fptr);
 void build_response(struct http_request *req, int conn);

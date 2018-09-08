@@ -28,9 +28,7 @@ void handle_request(void *arg) {
     char buff[MAXLINE] = {0};
     b_read = readn(conn, buff, MAXLINE);
     if (b_read == 0) {
-
         close_connection(pt);
-
     }
     printf("\nConnection accepted\n");
     printf("\n%s\n", buff);
@@ -125,6 +123,7 @@ int find_free_thread(struct thread_data *pt) {
  * @param listensd
  */
 void run_server(int *listensd) {
+
     int l = *listensd;
     struct sockaddr_in client;
     socklen_t len = sizeof(struct sockaddr_in);
@@ -133,16 +132,14 @@ void run_server(int *listensd) {
 
     struct thread_data *td = alloc_thread_data();
 
-    unsigned int pages = 10;
+    unsigned int pages = 100;
 
-    char* cache;
-
-    if(cache_initialize(pages, &cache) == -1){
+    if(cache_initialize(pages, &CACHE) == -1){
         fprintf(stdout, "error in cache_initialize\n");
 
     }
 
-    // TODO pass the cache pointer to the thread
+    printf("cache: %p\n", CACHE);
 
     printf("Server started at http://localhost:8000/index.html\n");
     printf("------Waiting for requests------\n");
@@ -151,13 +148,9 @@ void run_server(int *listensd) {
     for (;;) {
         int connsd = accept(l, (struct sockaddr *) &client, &len);
         exit_on_error(connsd < 0, "error in  accept");
-
         slot = find_free_thread(td);
         exit_on_error(slot == -1, "max num of connections reached");
-
         td[slot].sd = connsd;
-
-
         rv = pthread_create(&(td[slot].thread), NULL, (void *) handle_request, (void *) &td[slot]);
         exit_on_error(rv != 0, "error in pthread_create");
     }

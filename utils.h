@@ -23,11 +23,15 @@
 #include <ImageMagick-7/MagickWand/MagickWand.h>
 
 #define DIM_HEADER 300
+#define IMAGE_DIR "../www/images"
 
 //TODO html should be in a proper html page
 
 char *HTML_400;
 char *HTML_INDEX;
+
+char *CACHE;
+pthread_mutex_t mutex;
 
 void exit_on_error (int condition, const char * message);
 int readn(int conn, char *ptr, int n);

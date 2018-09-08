@@ -4,7 +4,7 @@
 #include "../utils.h"
 
 #define IMAGE_PRO_DEBUG 0
-#define IMAGE_DIR "../www/images/"
+
 
 #define ThrowWandException(wand){ \
   char *description; \
@@ -18,6 +18,6 @@
   exit( -1 ); \
 }
 
-unsigned char * process_image(char *source, size_t width, size_t height, float_t quality);
+unsigned char * process_image(char *source, size_t width, size_t height, float_t quality, size_t* size);
 
 #endif //WEB_SERVER_IMAGE_RESIZING_H

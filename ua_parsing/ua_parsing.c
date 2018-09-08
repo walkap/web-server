@@ -95,14 +95,24 @@ int get_info(const char *ua_str, const char **info) {
     //Get device size
     width = get_property(dataSet, offsets, "ScreenPixelsWidth");
     height = get_property(dataSet, offsets, "ScreenPixelsHeight");
+
+    printf("UAPARSING \nwidth: %s\n height: %s\n", width, height);
+
     //Check if device size are available, if not then return 1
     if(strcmp(width, UNKNOWN) == 0 || strcmp(height, UNKNOWN) == 0){
         puts("The device size in unknown!");
-        return 1;
+        return -1;
     }
     //Initialize the element of the two values array
-    info[0] = width;
-    info[1] = height;
+    //TODO check this if it works with images greater than 1200
+    char *ptr;
+    if(strtol(width, &ptr, 0) > 1200 || strtol(height, &ptr, 0) > 1200) {
+        info[0] = "1200";
+        info[1] = "1200";
+    }else{
+        info[0] = width;
+        info[1] = height;
+    }
     //free memory, offset and data set
     fiftyoneDegreesFreeDeviceOffsets(offsets);
     return 0;

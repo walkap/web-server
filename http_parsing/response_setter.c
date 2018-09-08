@@ -1,30 +1,27 @@
 #include "response_setter.h"
 
-char CACHE[200000];
-
 //TODO we should set the html root somehow so we can just use something like INDEX "index.html" insted the complete relative path
 //#define HTML_INDEX ".../www/index.html"
 //#define HTML_400 ".../www/400.html"
 
-void write_response(char *response, int len, int conn, struct http_request *pt) {
+void write_response(char *response, size_t lenght, int conn, struct http_request *pt) {
 
-    int b_written;
+    ssize_t b_written;
+    printf("LEN  %lu\n", lenght);
 
     printf("\n%s\n", response);
     fflush(stdout);
 
-    b_written = write(conn, response, len);
+    b_written = write(conn, response, (size_t) lenght);
     exit_on_error(b_written == -1, "error in write");
 
-    logging(pt, response, len);
-
+    logging(pt, response, lenght);
 }
 
 char *read_image(char *str2, int *len) {
-    char *str1 = "../storage";
-    char *path = malloc(strlen(str1) + strlen(str2) + 1);
+    char *path = malloc(strlen(IMAGE_DIR) + strlen(str2) + 1);
     exit_on_error(path == NULL, "error in malloc");
-    strcpy(path, str1);
+    strcpy(path, IMAGE_DIR);
     strcat(path, str2);
 
     char *fbuffer;
@@ -52,22 +49,22 @@ char *read_image(char *str2, int *len) {
     return fbuffer;
 }
 
-char *build_header(int status, char *type, int len, char *version) {
+char *build_header(int status, char *type, size_t len, char *version) {
+
     char *buff = malloc(sizeof(char) * DIM_HEADER);
     exit_on_error(buff == NULL, "error in malloc");
 
-
     if (status == 200) {
-
+        //TODO define macros for string like content-type
         snprintf(buff, DIM_HEADER,
-                 "%s 200 OK\r\nContent-Type: %s\r\nContent-Length: %i\r\nConnection: keep-alive\r\n\r\n", version, type,
+                 "%s 200 OK\r\nContent-Type: %s\r\nContent-Length: %lu\r\nConnection: keep-alive\r\n\r\n", version,
+                 type,
                  len);
         fflush(stdout);
 
     } else if (status == 400) {
-
         snprintf(buff, DIM_HEADER,
-                 "%s 400 Bad Request\r\nContent-Type: %s\r\nContent-Length: %i\r\nConnection: close\r\n\r\n", version,
+                 "%s 400 Bad Request\r\nContent-Type: %s\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n", version,
                  type, len);
 
     } else if (status == 404) {
@@ -127,19 +124,23 @@ void html_content(const char *dest, char *fptr) {
 }
 
 void build_response(struct http_request *req, int conn) {
-    char *fbuffer =  NULL;
-    char *response;
-    int hlen;
-    int lenght = 0;
-    char buff[50048];
 
-    //TODO too much vars without cast or wrong type
+    char *fbuffer = NULL;
+    char *response;
+    size_t hlen = 0;
+    size_t lenght = 0;
+    char buff[500048];
+
+    size_t *imgsize = malloc(sizeof(size_t));
+    exit_on_error(imgsize == NULL, "error in malloc");
+
+    //TODO file checking should be general
     if (strcmp(req->method, "invalid") == 0) {
 
         fbuffer = HTML_400;
         lenght = strlen(fbuffer);
 
-        response = build_header(400, "text/html", lenght, req->version);
+        response = build_header(400, "text/html", (int) lenght, req->version);
         exit_on_error(response == NULL, "error in build header");
 
         hlen = strlen(response);
@@ -156,59 +157,79 @@ void build_response(struct http_request *req, int conn) {
         hlen = strlen(response);
         memcpy(buff, response, hlen);
 
-
     } else if (strcmp(req->uri, "/wizard.jpg") == 0) {
 
-        char *p = CACHE;
         double q = parse_weight(req->accept);
+        char *u_a = parse_user_agent(req->user_agent);
+        int rv;
+        size_t width, height;
+
+        const char **info = malloc(10 * sizeof(char));
+        exit_on_error(info == NULL, "error in malloc");
+
         printf("\nimage quality: %.2f\n", q);
         fflush(stdout);
-        char *u_a = parse_user_agent(req->user_agent);
+
         printf("\nuser agent: %s\n", u_a);
         fflush(stdout);
-        const char **info = get_info(u_a);
-        int width = (int) info[0];
-        int height = (int) info[1];
 
-        printf("image heightxwidth %i %i", width, height);
+        rv = get_info(u_a, info);
+        if (rv == -1) {
+            height = 1200;
+            width = 1200;
+        } else {
+            char *pt;
+            width = (size_t) strtol(info[0], &pt, 0);
+            exit_on_error(*pt != '\0', "error in strtol width");
+            height = (size_t) strtol(info[1], &pt, 0);
+            exit_on_error(*pt != '\0', "error in strtol height");
+        }
+
         struct memory_cell *cell = malloc(sizeof(struct memory_cell));
         exit_on_error(cell == NULL, "error in malloc");
 
-        if (cache_check(p, &cell, req->uri, q, height, width) != -1) {
+        if (cache_check(CACHE, &cell, req->uri, q, height, width) != -1) {
 
-            char *img = malloc(50000);
+            printf("CACHE HIT\n");
+            char *img = malloc(cell->length);
             exit_on_error(img == NULL, "error in malloc");
-
             memcpy(img, cell->pointer, cell->length);
+            response = build_header(200, "image/gif", cell->length, req->version);
+            hlen = strlen(response);
+            memcpy(buff, response, hlen);
 
+            lenght = cell->length;
             fbuffer = img;
 
         } else {
 
-            char *img = read_image(req->uri, &lenght);
-
             printf("IN Process\n");
+            fbuffer = (char *) process_image(req->uri, width, height, q, imgsize);
+            printf("DEBUG\n");
 
-            fbuffer = process_image(img, width, height, q);
-
-            response = build_header(200, "image/gif", lenght, req->version);
-
+            response = build_header(200, "image/gif", *imgsize, req->version);
             hlen = strlen(response);
-
             memcpy(buff, response, hlen);
 
             printf("Inserting\n");
 
-            cache_insert(p, (void *) fbuffer, req->uri, q,
+            rv = pthread_mutex_lock(&mutex);
+            exit_on_error(rv != 0, "error in pthread_mutex_lock");
+
+            cache_insert(CACHE, (void *) fbuffer, *imgsize, req->uri, q,
                          height, width);
+
+            rv = pthread_mutex_unlock(&mutex);
+            exit_on_error(rv != 0, "error in pthread_mutex_unlock");
+
+            lenght = *imgsize;
+
         }
 
     } else {
-
         response = build_header(404, " ", 0, req->version);
         hlen = strlen(response);
         memcpy(buff, response, hlen);
-
     }
 
     if (strcmp(req->method, "GET") == 0) {
@@ -216,6 +237,7 @@ void build_response(struct http_request *req, int conn) {
     }
 
     write_response(buff, hlen + lenght, conn, req);
+
 }
 
 int set_response(char *str, int conn) {
