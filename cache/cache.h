@@ -15,10 +15,10 @@ struct memory_cell {
     char* pointer;
 
     // length in buff
-    unsigned int length;
+    size_t length;
 
     // next item
-    unsigned int next;
+    size_t next;
 
     // time of last hit
     time_t seconds;
@@ -33,8 +33,8 @@ struct memory_cell {
 
 int cache_initialize(size_t numb, char **cache);
 
-int cache_insert(char *cache, void *file, char *name, double qualityImage, unsigned int imageLength,
-                 unsigned int imageWidth);
+int cache_insert(char *cache, void *file, size_t file_length, char *name, double quality_image, size_t image_length,
+                 size_t image_width);
 
 int cache_check(char *cache, struct memory_cell **cell, char *name, double qualityImage,
                 unsigned int imageLength, unsigned int imageWidth);
