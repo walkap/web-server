@@ -134,7 +134,8 @@ void run_server(int *listensd) {
     printf("------Waiting for requests------\n");
     fflush(stdout);
 
-    while ((connsd = accept(*listensd, (struct sockaddr *) &client, &len)) > 0) {
+    while (1) {
+        connsd = accept(*listensd, (struct sockaddr *) &client, &len);
         slot = find_free_thread(td);
         exit_on_error(slot == -1, "max num of connections reached");
         td[slot].sd = connsd;

@@ -20,6 +20,7 @@ void write_response(char *response, size_t lenght, int conn, struct http_request
 
     /*write log*/
     logging(pt, response, lenght);
+
 }
 
 /**
@@ -133,7 +134,8 @@ void build_response(struct http_request *req, int conn) {
     char *response;
     size_t hlen = 0;
     size_t lenght = 0;
-    char buff[500048];
+    char *buff = malloc(BUFFDIM);
+    exit_on_error(buff == NULL, "error in malloc");
 
     size_t *imgsize = malloc(sizeof(size_t));
     exit_on_error(imgsize == NULL, "error in malloc");
@@ -192,15 +194,14 @@ void build_response(struct http_request *req, int conn) {
         if (cache_check(CACHE, &cell, req->uri, q, height, width) != -1) {
 
             printf("CACHE HIT\n");
-            char *img = malloc(cell->length);
-            exit_on_error(img == NULL, "error in malloc");
-            memcpy(img, cell->pointer, cell->length);
+            fbuffer = malloc(cell->length);
+            exit_on_error(fbuffer == NULL, "error in malloc");
+            memcpy(fbuffer, cell->pointer, cell->length);
             response = build_header(200, "image/gif", cell->length, req->version);
             hlen = strlen(response);
             memcpy(buff, response, hlen);
 
             lenght = cell->length;
-            fbuffer = img;
 
         } else {
 
@@ -224,6 +225,7 @@ void build_response(struct http_request *req, int conn) {
             exit_on_error(rv != 0, "error in pthread_mutex_unlock");
 
             lenght = *imgsize;
+            free(cell);
 
         }
 
@@ -239,6 +241,11 @@ void build_response(struct http_request *req, int conn) {
 
     write_response(buff, hlen + lenght, conn, req);
 
+    free(buff);
+    free(response);
+    free(fbuffer);
+    free(imgsize);
+    free(req);
 }
 
 /**

@@ -24,6 +24,7 @@
 
 #define DIM_HEADER 300
 #define N_PAGES 100
+#define BUFFDIM 500000
 
 #define IMAGE_DIR "../www/images"
 #define HTML_DIR "../www"
