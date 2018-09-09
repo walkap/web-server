@@ -1,9 +1,13 @@
 #include "response_setter.h"
 
-//TODO we should set the html root somehow so we can just use something like INDEX "index.html" insted the complete relative path
-//#define HTML_INDEX ".../www/index.html"
-//#define HTML_400 ".../www/400.html"
 
+/**This method writes the http response in the socket
+ *
+ * @param response
+ * @param lenght
+ * @param conn
+ * @param pt
+ */
 void write_response(char *response, size_t lenght, int conn, struct http_request *pt) {
 
     ssize_t b_written;
@@ -12,16 +16,44 @@ void write_response(char *response, size_t lenght, int conn, struct http_request
     printf("\n%s\n", response);
     fflush(stdout);
 
-    b_written = write(conn, response, (size_t) lenght);
+    b_written = writen(conn, response, (size_t) lenght);
     exit_on_error(b_written == -1, "error in write");
 
+    /*write log*/
     logging(pt, response, lenght);
 }
 
-char *read_image(char *str2, int *len) {
-    char *path = malloc(strlen(IMAGE_DIR) + strlen(str2) + 1);
+/**
+ * This method searches if the image requested is present in the server
+ * @param filename
+ * @return
+ */
+int search_in_pics(char * filename){
+
+    char *path = malloc(strlen(IMAGE_DIR) + strlen(filename) + 1);
     exit_on_error(path == NULL, "error in malloc");
     strcpy(path, IMAGE_DIR);
+    strcat(path, filename);
+    printf("%s\n", path);
+    FILE *file;
+    if ((file = fopen(path, "r"))){
+        fclose(file);
+        return 1;
+    }
+    return 0;
+}
+
+/**
+ * This method reads a html file and saves it in a buffer
+ * @param str2
+ * @param len
+ * @return
+ */
+char *read_html(char *str2, size_t *len) {
+
+    char *path = malloc(strlen(HTML_DIR) + strlen(str2) + 1);
+    exit_on_error(path == NULL, "error in malloc");
+    strcpy(path, HTML_DIR);
     strcat(path, str2);
 
     char *fbuffer;
@@ -49,6 +81,15 @@ char *read_image(char *str2, int *len) {
     return fbuffer;
 }
 
+
+/**
+ * This method builds the header of the http response header according to parameters
+ * @param status
+ * @param type
+ * @param len
+ * @param version
+ * @return
+ */
 char *build_header(int status, char *type, size_t len, char *version) {
 
     char *buff = malloc(sizeof(char) * DIM_HEADER);
@@ -80,49 +121,13 @@ char *build_header(int status, char *type, size_t len, char *version) {
     return buff;
 }
 
+
 /**
- * Copies the content of a file in a char *
- * @param destination buffer where copy the file content
- * @param fptr file path
+ * This method builds an http response message according to the uri requested. If the uri is an image,
+ * the cache is checked, if the image is not in the cache, it is processed, saved in cache and sent in the response.
+ * @param req
+ * @param conn
  */
-void html_content(const char *dest, char *fptr) {
-
-    int fd;
-    char *html;
-
-    //Open file descriptor
-    fd = open(fptr, O_RDONLY);
-    if (fd == -1) {
-        perror("open()");
-        exit(EXIT_FAILURE);
-    }
-
-    //Get the file size
-    off_t size = get_file_size(fd);
-
-    //Allocate dynamic memory with the size file
-    html = malloc(sizeof(char) * size);
-    if (html == NULL) {
-        perror("malloc()");
-        exit(EXIT_FAILURE);
-    }
-
-    //Read the file and save the content into the buffer
-    if (read(fd, html, (size_t) size) == -1) {
-        perror("read()");
-        exit(EXIT_FAILURE);
-    }
-
-    //Close the file descriptor
-    close(fd);
-
-    //Assign the value to the destination
-    dest = html;
-
-    //Free memory
-    free(html);
-}
-
 void build_response(struct http_request *req, int conn) {
 
     char *fbuffer = NULL;
@@ -134,11 +139,9 @@ void build_response(struct http_request *req, int conn) {
     size_t *imgsize = malloc(sizeof(size_t));
     exit_on_error(imgsize == NULL, "error in malloc");
 
-    //TODO file checking should be general
-    if (strcmp(req->method, "invalid") == 0) {
+    if (req->invalid_request) {
 
-        fbuffer = HTML_400;
-        lenght = strlen(fbuffer);
+        fbuffer = read_html("/400.html", &lenght);
 
         response = build_header(400, "text/html", (int) lenght, req->version);
         exit_on_error(response == NULL, "error in build header");
@@ -148,8 +151,9 @@ void build_response(struct http_request *req, int conn) {
 
     } else if (strcmp(req->uri, "/index.html") == 0) {
 
-        fbuffer = HTML_INDEX;
-        lenght = strlen(fbuffer);
+        fbuffer = read_html(req->uri, &lenght);
+
+        printf("%s\n", fbuffer);
 
         response = build_header(200, "text/html", lenght, req->version);
         exit_on_error(response == NULL, "error in build header");
@@ -157,7 +161,7 @@ void build_response(struct http_request *req, int conn) {
         hlen = strlen(response);
         memcpy(buff, response, hlen);
 
-    } else if (strcmp(req->uri, "/wizard.jpg") == 0) {
+    } else if (search_in_pics(req->uri)) {
 
         double q = parse_weight(req->accept);
         char *u_a = parse_user_agent(req->user_agent);
@@ -240,21 +244,25 @@ void build_response(struct http_request *req, int conn) {
 
 }
 
+/**
+ * This method is used to specify if the request has a valid sintax and then builds a response
+ * @param str
+ * @param conn
+ * @return
+ */
 int set_response(char *str, int conn) {
-    int alive;
+
+    int alive= 0;
     struct http_request *request;
 
     request = parse_request(str);
 
     if (request->alive) {
         alive = 1;
-    } else {
-        alive = 0;
     }
-
     if (strcmp(request->method, "GET") != 0 &&
         strcmp(request->method, "HEAD") != 0) {
-        request->method = "invalid";
+        request->invalid_request = 1;
     }
 
     build_response(request, conn);

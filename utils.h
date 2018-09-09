@@ -26,17 +26,13 @@
 #define N_PAGES 100
 
 #define IMAGE_DIR "../www/images"
-
-//TODO html should be in a proper html page
-
-char *HTML_400;
-char *HTML_INDEX;
+#define HTML_DIR "../www"
 
 char *CACHE;
 pthread_mutex_t mutex;
 
 void exit_on_error (int condition, const char * message);
 int readn(int conn, char *ptr, int n);
-off_t get_file_size(int fd);
+ssize_t writen(int fd, const void *buf, size_t n);
 
 #endif //WEB_SERVER_UTILS_H

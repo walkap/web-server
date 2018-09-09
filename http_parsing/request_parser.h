@@ -9,6 +9,7 @@ struct http_request {
     char *version;
     char *accept;
     char *user_agent;
+    int invalid_request;
     int alive;
 };
 

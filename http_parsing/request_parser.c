@@ -7,11 +7,16 @@ double get_double(char *str) {
     return strtod(str, NULL);
 }
 
+/**
+ * This method searches for the weight q in a "Accept:" header line
+ * @param str
+ * @return
+ */
 double parse_weight(char *str) {
     char *s = "q";
     char *token;
 
-    token = strtok(str, s);
+    strtok(str, s);
     token = strtok(NULL, s);
 
     double q = get_double(token);
@@ -19,7 +24,10 @@ double parse_weight(char *str) {
     return q;
 
 }
-
+/**
+ * @param str
+ * @return
+ */
 char *parse_user_agent(char *str) {
 
     char *newStr = str;
@@ -29,6 +37,11 @@ char *parse_user_agent(char *str) {
     return newStr;
 }
 
+/**
+ * This method parses the request line to search for the method, protocol version and the uri requested
+ * @param r
+ * @param t
+ */
 void parse_request_line(struct http_request *r, char *t) {
     char *sc = " ";
     char *token;
@@ -55,6 +68,11 @@ void parse_request_line(struct http_request *r, char *t) {
 
 }
 
+/**
+ * This method builds a http_request struct that contains info regarding requests
+ * @param str
+ * @return
+ */
 struct http_request *parse_request(char *str) {
     struct http_request *request;
     const char s[3] = "\r\n";
@@ -64,8 +82,8 @@ struct http_request *parse_request(char *str) {
     exit_on_error(request == NULL, "error in malloc");
 
     request->alive = 0;
-    int len = strlen(str);
-    char *buff = malloc(len + 1);
+    int len = (int)strlen(str);
+    char *buff = malloc((len + 1));
     exit_on_error(buff == NULL, "error in malloc");
     strcpy(buff, str);
 
