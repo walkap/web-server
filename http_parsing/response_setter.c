@@ -11,7 +11,6 @@
 void write_response(char *response, size_t lenght, int conn, struct http_request *pt) {
 
     ssize_t b_written;
-    printf("LEN  %lu\n", lenght);
 
     printf("\n%s\n", response);
     fflush(stdout);
@@ -153,8 +152,6 @@ void build_response(struct http_request *req, int conn) {
 
         fbuffer = read_html(req->uri, &lenght);
 
-        printf("%s\n", fbuffer);
-
         response = build_header(200, "text/html", lenght, req->version);
         exit_on_error(response == NULL, "error in build header");
 
@@ -257,9 +254,12 @@ int set_response(char *str, int conn) {
 
     request = parse_request(str);
 
+
     if (request->alive) {
         alive = 1;
     }
+    request->invalid_request=0;
+
     if (strcmp(request->method, "GET") != 0 &&
         strcmp(request->method, "HEAD") != 0) {
         request->invalid_request = 1;
