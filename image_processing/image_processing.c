@@ -1,6 +1,28 @@
 #include "image_processing.h"
 
 /**
+ * Get the screen size and adapt the width based on some standard values
+ * @param width
+ * @return The new width
+ */
+size_t set_width(size_t width){
+    if(width <= 320){
+        width = XSMALL_IMAGE;
+    } else if(width > 320 && width <= 480){
+        width = SMALL_IMAGE;
+    } else if(width > 480 && width <= 768){
+        width = MEDIUM_IMAGE;
+    } else if(width > 768 && width <= 1024){
+        width = LARGE_IMAGE;
+    } else if(width > 1024 && width <= 1280){
+        width = XLARGE_IMAGE;
+    }else{
+        width = 1400;
+    }
+    return width;
+}
+
+/**
  * This function resize an image besides check the aspect ratio and return a proper image
  * with new dimensions as requested
  * @param status - MagickBooleanType
@@ -132,19 +154,9 @@ unsigned char *process_image(char *source, size_t width, float_t quality, size_t
     }
     //Image resize only if the ua width is less than the original image
     if(width < old_image_width){
-        if(width <= 320){
-            width = XSMALL_IMAGE;
-        } else if(width > 320 && width <= 480){
-            width = SMALL_IMAGE;
-        } else if(width > 480 && width <= 768){
-            width = MEDIUM_IMAGE;
-        } else if(width > 768 && width <= 1024){
-            width = LARGE_IMAGE;
-        } else if(width > 1024 && width <= 1280){
-            width = XLARGE_IMAGE;
-        }else{
-            width = 1400;
-        }
+        //Set the right size based on some standard values
+        width = set_width(width);
+        //Resize the image with the new width
         resize_image(MagickFalse, magick_wand, width);
         //Name the new image
         destination = rename_file(source, width);
