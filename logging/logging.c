@@ -8,6 +8,13 @@ FILE *open_logfile(char *s) {
     return fptr;
 }
 
+/**
+ * This method writes logs about every request and response in the logfile.
+ *
+ * @param pt
+ * @param str
+ * @param lenght
+ */
 void logging(struct http_request *pt, char *str, size_t lenght) {
     int rv;
     char *s = " ";

@@ -24,10 +24,10 @@ struct memory_cell {
     time_t seconds;
 
     // image length
-    unsigned int imageLength;
+    size_t image_length;
 
     // image width
-    unsigned int imageWidth;
+    size_t image_width;
 
 };
 
@@ -36,7 +36,7 @@ int cache_initialize(size_t numb, char **cache);
 int cache_insert(char *cache, void *file, size_t file_length, char *name, double quality_image, size_t image_length,
                  size_t image_width);
 
-int cache_check(char *cache, struct memory_cell **cell, char *name, double qualityImage,
+int cache_check(char *cache, struct memory_cell **cell, char *name, double quality_image,
                 unsigned int imageLength, unsigned int imageWidth);
 
 #endif //WEB_SERVER_CACHE_H

@@ -40,20 +40,20 @@ int find_empty_cell(char *cache, struct memory_cell **cell){
 }
 
 // find the less useful cache item and return the numbers of bytes from cache start (-1 for error)
-unsigned int find_less_useful(char *cache, size_t fileLength, struct memory_cell **cell){
+int find_less_useful(char *cache, size_t file_length, struct memory_cell **cell){
 
     unsigned int length = *((unsigned int*) (cache - sizeof(unsigned int)));
 
     int sum = 0;
 
-    int positionLessUseful = 0;
+    int position_less_useful = 0;
 
     struct memory_cell* cells = (struct memory_cell*) cache;
 
-    struct memory_cell* lessUseful = cells;
+    struct memory_cell* less_useful = cells;
 
-    if((cells -> next) < fileLength){
-        positionLessUseful = -1;
+    if((cells -> next) < file_length){
+        position_less_useful = -1;
 
     }
 
@@ -66,12 +66,12 @@ unsigned int find_less_useful(char *cache, size_t fileLength, struct memory_cell
 
         sum += i;
 
-        //printf("control find lessUseful %p \ncell seconds: %ld\nlessUseful seconds: %ld\n", cache, cells -> seconds, lessUseful -> seconds);
+        //printf("control find less_useful %p \ncell seconds: %ld\nless_useful seconds: %ld\n", cache, cells -> seconds, less_useful -> seconds);
 
-        if(*(cells -> title) != '\0' && (cells -> next) >= fileLength && cells -> seconds < lessUseful -> seconds){
+        if(*(cells -> title) != '\0' && (cells -> next) >= file_length && cells -> seconds < less_useful -> seconds){
 
-            lessUseful = cells;
-            positionLessUseful = sum;
+            less_useful = cells;
+            position_less_useful = sum;
 
         }
 
@@ -83,12 +83,12 @@ unsigned int find_less_useful(char *cache, size_t fileLength, struct memory_cell
 
     }
 
-    if(positionLessUseful != -1){
-        *cell = lessUseful;
+    if(position_less_useful != -1){
+        *cell = less_useful;
 
     }
 
-    return positionLessUseful;
+    return position_less_useful;
 
 }
 
@@ -115,40 +115,42 @@ int cache_insert(char *cache, void *file, size_t file_length, char *name, double
 
     cell->seconds = time(NULL);
 
-    cell->imageLength = image_length;
+    cell->image_length = image_length;
 
-    cell->imageWidth = image_width;
+    cell->image_width = image_width;
 
-    struct memory_cell* emptyCell;
+    struct memory_cell* empty_bytes;
 
     // check for empty cell (change)
-    int numberByte = find_empty_cell(cache, &emptyCell);
-    printf("control find_empty_cell numerByte: %d\n", numberByte);
+    int bytes_number = find_empty_cell(cache, &empty_bytes);
+    printf("control find_empty_cell numerByte: %d\n", bytes_number);
 
     // find the cell to eliminate if the cell are full
-    if(numberByte == -1){
+    if(bytes_number == -1){
 
         // find the less useful cache cell
-        numberByte = find_less_useful(cache, file_length, &emptyCell);
-        printf("control find_less_useful numerByte: %d\n", numberByte);
+        bytes_number = find_less_useful(cache, file_length, &empty_bytes);
+        printf("control find_less_useful numerByte: %d\n", bytes_number);
 
-        if(numberByte == -1){
+        if(bytes_number == -1){
 
             fprintf(stderr, "cache full and not useful find\n");
             return -1;
 
         }
 
-        cell->next = ((struct memory_cell*) (cache + numberByte)) -> next;
+        cell->next = ((struct memory_cell*) (cache + bytes_number)) -> next;
 
     }
 
     // insert pointer in cell
-    cell->pointer = cache + numberByte;
+    cell->pointer = cache + bytes_number;
 
-    printf("control cache_insert cell.pointer : %p\n", cell->pointer);
+    printf("control cache_insert cell.pointer : %p\n", (void*) cell->pointer);
 
     printf("control cache_insert cell.seconds: %ld\n", cell->seconds);
+
+    printf("title: %s\n quality: %f\n", cell->title, cell->quality);
 
     // insert struct in cache
     memcpy(cell->pointer, &cell, sizeof(struct memory_cell));
@@ -164,7 +166,7 @@ int cache_insert(char *cache, void *file, size_t file_length, char *name, double
 }
 
 // check if one item is in the cache
-int cache_check(char *cache, struct memory_cell **cell, char *name, double qualityImage,
+int cache_check(char *cache, struct memory_cell **cell, char *name, double quality_image,
                 unsigned int imageLength, unsigned int imageWidth){
 
     unsigned int length = *((unsigned int*) (cache - sizeof(unsigned int)));
@@ -180,14 +182,14 @@ int cache_check(char *cache, struct memory_cell **cell, char *name, double quali
 
         printf("control cache_check cell title: %s\n", cells -> title);
         printf("control cache_check title: %s\n", name);
-        printf("control cache_check cell quality: %u\n", cells -> quality);
-        printf("control cache_check cell quality: %u\n", qualityImage);
+        printf("control cache_check cell quality: %f\n", cells -> quality);
+        printf("control cache_check quality: %f\n", quality_image);
         printf("control cache_check cache: %p\n", cells);
 
         cache += i;
         cells = (struct memory_cell*) cache;
 
-        if(strcmp(cells -> title, name) == 0 && cells -> quality == qualityImage && cells -> imageLength == imageLength && cells -> imageWidth == imageWidth){
+        if(strcmp(cells -> title, name) == 0 && cells -> quality == quality_image && cells -> image_length == imageLength && cells -> image_width == imageWidth){
 
             //sleep(1);
 
