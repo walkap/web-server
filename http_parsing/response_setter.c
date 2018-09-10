@@ -12,9 +12,6 @@ void write_response(char *response, size_t lenght, int conn, struct http_request
 
     ssize_t b_written;
 
-    printf("\n%s\n", response);
-    fflush(stdout);
-
     b_written = writen(conn, response, (size_t) lenght);
     exit_on_error(b_written == -1, "error in write");
 
@@ -28,13 +25,12 @@ void write_response(char *response, size_t lenght, int conn, struct http_request
  * @param filename
  * @return
  */
-int search_in_pics(char * filename){
+int search_files(char*dir, char * filename){
 
-    char *path = malloc(strlen(IMAGE_DIR) + strlen(filename) + 1);
+    char *path = malloc(strlen(dir) + strlen(filename) + 1);
     exit_on_error(path == NULL, "error in malloc");
-    strcpy(path, IMAGE_DIR);
+    strcpy(path, dir);
     strcat(path, filename);
-    printf("%s\n", path);
     FILE *file;
     if ((file = fopen(path, "r"))){
         fclose(file);
@@ -49,11 +45,11 @@ int search_in_pics(char * filename){
  * @param len
  * @return
  */
-char *read_html(char *str2, size_t *len) {
+char *read_file(char* dir, char *str2, size_t *len) {
 
-    char *path = malloc(strlen(HTML_DIR) + strlen(str2) + 1);
+    char *path = malloc(strlen(dir) + strlen(str2) + 1);
     exit_on_error(path == NULL, "error in malloc");
-    strcpy(path, HTML_DIR);
+    strcpy(path, dir);
     strcat(path, str2);
 
     char *fbuffer;
@@ -142,7 +138,7 @@ void build_response(struct http_request *req, int conn) {
 
     if (req->invalid_request) {
 
-        fbuffer = read_html("/400.html", &lenght);
+        fbuffer = read_file(FILE_DIR, "/400.html", &lenght);
 
         response = build_header(400, "text/html", (int) lenght, req->version);
         exit_on_error(response == NULL, "error in build header");
@@ -150,17 +146,8 @@ void build_response(struct http_request *req, int conn) {
         hlen = strlen(response);
         memcpy(buff, response, hlen);
 
-    } else if (strcmp(req->uri, "/index.html") == 0) {
-
-        fbuffer = read_html(req->uri, &lenght);
-
-        response = build_header(200, "text/html", lenght, req->version);
-        exit_on_error(response == NULL, "error in build header");
-
-        hlen = strlen(response);
-        memcpy(buff, response, hlen);
-
-    } else if (search_in_pics(req->uri)) {
+    }
+    else if (search_files(IMAGE_DIR, req->uri)) {
 
         double q = parse_weight(req->accept);
         char *u_a = parse_user_agent(req->user_agent);
@@ -180,7 +167,8 @@ void build_response(struct http_request *req, int conn) {
         if (rv == -1) {
             height = 1200;
             width = 1200;
-        } else {
+        }
+        else{
             char *pt;
             width = (size_t) strtol(info[0], &pt, 0);
             exit_on_error(*pt != '\0', "error in strtol width");
@@ -229,6 +217,26 @@ void build_response(struct http_request *req, int conn) {
 
         }
 
+    } else if (search_files(FILE_DIR, req->uri)) {
+
+        char* type = NULL;
+        fbuffer = read_file(FILE_DIR, req->uri, &lenght);
+
+        if (strstr(req->uri, ".css") != NULL) {
+            type = "text/css";
+        }
+        else if (strstr(req->uri, ".html") != NULL) {
+            type = "text/html";
+        }
+        else if (strstr(req->uri, ".js") != NULL) {
+            type = "application/javascript";
+        }
+        response = build_header(200, type, lenght, req->version);
+        exit_on_error(response == NULL, "error in build header");
+
+        hlen = strlen(response);
+        memcpy(buff, response, hlen);
+
     } else {
         response = build_header(404, " ", 0, req->version);
         hlen = strlen(response);
@@ -239,6 +247,7 @@ void build_response(struct http_request *req, int conn) {
         memcpy(buff + hlen, fbuffer, lenght);
     }
 
+    printf("\n%s\n", response);
     write_response(buff, hlen + lenght, conn, req);
 
     free(buff);

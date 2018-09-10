@@ -24,10 +24,10 @@
 
 #define DIM_HEADER 300
 #define N_PAGES 100
-#define BUFFDIM 120000
+#define BUFFDIM 200000
 
 #define IMAGE_DIR "../www/images"
-#define HTML_DIR "../www"
+#define FILE_DIR "../www"
 
 char *CACHE;
 pthread_mutex_t mutex;
