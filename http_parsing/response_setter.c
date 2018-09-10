@@ -194,7 +194,7 @@ void build_response(struct http_request *req, int conn) {
         } else {
 
             printf("IN Process\n");
-            fbuffer = (char *) process_image(req->uri, width, height, q, imgsize);
+            fbuffer = (char *) process_image(req->uri, width, q, imgsize);
             printf("DEBUG\n");
 
             response = build_header(200, "image/jpeg", *imgsize, req->version);
