@@ -3,7 +3,7 @@
 
 #include "../utils.h"
 
-#define IMAGE_PRO_DEBUG 1
+#define IMAGE_PRO_DEBUG 0
 
 #define XSMALL_IMAGE 320
 #define SMALL_IMAGE 480
