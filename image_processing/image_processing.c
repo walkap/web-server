@@ -87,10 +87,6 @@ void write_image(MagickBooleanType status, MagickWand *magick_wand, char *filena
 char *rename_file(const char *filename, size_t width, size_t height, MagickWand *magick_wand) {
     char *newfilename;
 
-    //TODO use the graziani's function to rename images
-
-    //TODO to rename the image just write down the width such as name-320w.jpg
-
     //Check the aspect ratio
     size_t original_width = MagickGetImageWidth(magick_wand);
     size_t original_height = MagickGetImageHeight(magick_wand);
@@ -126,7 +122,8 @@ char *rename_file(const char *filename, size_t width, size_t height, MagickWand 
     strncpy(newfilename, filename, strlen(filename) - 4);
 
     //Add the image size and formate to the new file name array char
-    sprintf(newfilename + strlen(filename) - 4, "-%ix%i.jpg", (int) width, (int) height);
+    sprintf(newfilename + strlen(filename) - 4, "-%iw.jpg", (int) width);
+
     return newfilename;
 }
 
@@ -186,6 +183,6 @@ unsigned char * process_image(char *source, size_t width, size_t height, float_t
 int main() {
     size_t *imgsize = malloc(sizeof(size_t));
     //TODO we don't need height at all
-    process_image("/scarpe.jpg", 320, 500, 0.5, imgsize);
+    process_image("/scarpe.jpg", 480, 500, 0.5, imgsize);
 }
 #endif

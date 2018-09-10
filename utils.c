@@ -64,7 +64,6 @@ ssize_t writen(int fd, const void *buf, size_t n)
  * @param fd file descriptor
  * @return  off_t the offset of the file
  */
-//TODO this could be shared with the whole project
 off_t get_file_size(int fd) {
     int stat;
     struct stat info;
