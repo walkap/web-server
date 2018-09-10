@@ -14,6 +14,11 @@ void resize_image(MagickBooleanType status, MagickWand *magick_wand, size_t widt
     float aspect_ratio, new_aspect_ratio;
 
     //TODO this should not be replicated it should be in a external function, see also rename_image
+
+    //TODO use standard sizes such as 800 480 320
+
+
+    //TODO if width is greater than original width then DO NOTHING
     //This is used to maintain ratio and avoid distortion
     aspect_ratio = (float_t) original_width / original_height;
     new_aspect_ratio = (float_t) width / height;
@@ -81,6 +86,10 @@ void write_image(MagickBooleanType status, MagickWand *magick_wand, char *filena
  */
 char *rename_file(const char *filename, size_t width, size_t height, MagickWand *magick_wand) {
     char *newfilename;
+
+    //TODO use the graziani's function to rename images
+
+    //TODO to rename the image just write down the width such as name-320w.jpg
 
     //Check the aspect ratio
     size_t original_width = MagickGetImageWidth(magick_wand);
@@ -176,6 +185,7 @@ unsigned char * process_image(char *source, size_t width, size_t height, float_t
 #if IMAGE_PRO_DEBUG
 int main() {
     size_t *imgsize = malloc(sizeof(size_t));
-    process_image("/scarpe.jpg", 207, 500, 0.5, imgsize);
+    //TODO we don't need height at all
+    process_image("/scarpe.jpg", 320, 500, 0.5, imgsize);
 }
 #endif
