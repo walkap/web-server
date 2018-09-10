@@ -81,37 +81,10 @@ void write_image(MagickBooleanType status, MagickWand *magick_wand, char *filena
  * This function rename an image after the image size
  * @param filename - older image name
  * @param width
- * @param height
  * @return - char * returns a pointer to the new name
  */
-char *rename_file(const char *filename, size_t width, size_t height, MagickWand *magick_wand) {
+char *rename_file(const char *filename, size_t width) {
     char *newfilename;
-
-    //Check the aspect ratio
-    size_t original_width = MagickGetImageWidth(magick_wand);
-    size_t original_height = MagickGetImageHeight(magick_wand);
-
-    float original_aspect_ratio, new_aspect_ratio;
-
-    //This is used to maintain ratio and avoid distortion
-    original_aspect_ratio = (float_t) original_width / original_height;
-    new_aspect_ratio = (float_t) width / height;
-
-    //Check if the ratio it is the same as the values requested
-    if (original_aspect_ratio != new_aspect_ratio) {
-        height = (size_t) (width / original_aspect_ratio);
-    }
-    
-    //Check if the image size is equal to zero
-    if (width == 0 || height == 0) {
-        printf("The image size is zero");
-        exit(EXIT_FAILURE);
-    }
-    //Check if size is too big
-    if (width > 9999 || height > 9999) {
-        printf("The image size should be <= 9999");
-        exit(EXIT_FAILURE);
-    }
     //Initialize array char to contain the complete new filename and the format
     newfilename = calloc(strlen(filename), (sizeof(char)));
     if(newfilename == NULL){
@@ -120,10 +93,11 @@ char *rename_file(const char *filename, size_t width, size_t height, MagickWand 
     }
     //Copy the file name without the format into the array char
     strncpy(newfilename, filename, strlen(filename) - 4);
-
     //Add the image size and formate to the new file name array char
-    sprintf(newfilename + strlen(filename) - 4, "-%iw.jpg", (int) width);
-
+    if( sprintf(newfilename + strlen(filename) - 4, "-%iw.jpg", (int) width) < 0){
+        perror("sprintf");
+        exit(EXIT_FAILURE);
+    }
     return newfilename;
 }
 
@@ -158,8 +132,12 @@ unsigned char * process_image(char *source, size_t width, size_t height, float_t
     if (status == MagickFalse) {
         ThrowWandException(magick_wand);
     }
-    //Image resize
-    resize_image(MagickFalse, magick_wand, width, height);
+
+    //Image resize only if the ua width is less than the original image
+    if(width < MagickGetImageWidth(magick_wand)){
+        resize_image(MagickFalse, magick_wand, width, height);
+    }
+
     //Check if quality value was set
     if(quality != -1){
         //Image quality compression
@@ -169,7 +147,7 @@ unsigned char * process_image(char *source, size_t width, size_t height, float_t
     blob = MagickGetImageBlob(magick_wand, newsize);
 
     //This rename the image as the formats wants image-widthxheight.jpg
-    destination = rename_file(source, width, height, magick_wand);
+    destination = rename_file(source, width);
 
     //Write the image then destroy it.
     write_image(status, magick_wand, destination);
@@ -183,6 +161,6 @@ unsigned char * process_image(char *source, size_t width, size_t height, float_t
 int main() {
     size_t *imgsize = malloc(sizeof(size_t));
     //TODO we don't need height at all
-    process_image("/scarpe.jpg", 480, 500, 0.5, imgsize);
+    process_image("/scarpe.jpg", 1024, 500, 0.5, imgsize);
 }
 #endif
