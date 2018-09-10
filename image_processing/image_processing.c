@@ -147,11 +147,12 @@ unsigned char * process_image(char *source, size_t width, size_t height, float_t
     blob = MagickGetImageBlob(magick_wand, newsize);
 
     //This rename the image as the formats wants image-widthxheight.jpg
-    destination = rename_file(source, width);
-
-    //Write the image then destroy it.
-    write_image(status, magick_wand, destination);
-    free(destination);
+    if(width < MagickGetImageWidth(magick_wand)){
+        destination = rename_file(source, width);
+        //Write the image then destroy it.
+        write_image(status, magick_wand, destination);
+        free(destination);
+    }
     DestroyMagickWand(magick_wand);
     MagickWandTerminus();
     return blob;
@@ -161,6 +162,6 @@ unsigned char * process_image(char *source, size_t width, size_t height, float_t
 int main() {
     size_t *imgsize = malloc(sizeof(size_t));
     //TODO we don't need height at all
-    process_image("/scarpe.jpg", 1024, 500, 0.5, imgsize);
+    process_image("/wizard.jpg", 1280, 500, 0.5, imgsize);
 }
 #endif
