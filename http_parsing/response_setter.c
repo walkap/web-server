@@ -185,7 +185,7 @@ void build_response(struct http_request *req, int conn) {
             fbuffer = malloc(cell->length);
             exit_on_error(fbuffer == NULL, "error in malloc");
             memcpy(fbuffer, cell->pointer, cell->length);
-            response = build_header(200, "image/gif", cell->length, req->version);
+            response = build_header(200, "image/jpeg", cell->length, req->version);
             hlen = strlen(response);
             memcpy(buff, response, hlen);
 
@@ -197,7 +197,7 @@ void build_response(struct http_request *req, int conn) {
             fbuffer = (char *) process_image(req->uri, width, height, q, imgsize);
             printf("DEBUG\n");
 
-            response = build_header(200, "image/gif", *imgsize, req->version);
+            response = build_header(200, "image/jpeg", *imgsize, req->version);
             hlen = strlen(response);
             memcpy(buff, response, hlen);
 
@@ -230,6 +230,9 @@ void build_response(struct http_request *req, int conn) {
         }
         else if (strstr(req->uri, ".js") != NULL) {
             type = "application/javascript";
+        }
+        else if (strstr(req->uri, ".jpg") != NULL) {
+            type = "image/jpeg";
         }
         response = build_header(200, type, lenght, req->version);
         exit_on_error(response == NULL, "error in build header");
