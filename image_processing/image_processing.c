@@ -14,11 +14,7 @@ void resize_image(MagickBooleanType status, MagickWand *magick_wand, size_t widt
     float aspect_ratio, new_aspect_ratio;
 
     //TODO this should not be replicated it should be in a external function, see also rename_image
-
     //TODO use standard sizes such as 800 480 320
-
-
-    //TODO if width is greater than original width then DO NOTHING
     //This is used to maintain ratio and avoid distortion
     aspect_ratio = (float_t) original_width / original_height;
     new_aspect_ratio = (float_t) width / height;
@@ -108,11 +104,13 @@ char *rename_file(const char *filename, size_t width) {
  * @param width - Image's widht we want to achieve
  * @param height - Image's width we want to achieve
  * @param quality - Image's quality compression, set -1 if it doesn't required
+ * @param newsize - The size of the new blob
  * @return A blob to the image file
  */
 unsigned char * process_image(char *source, size_t width, size_t height, float_t quality, size_t* newsize) {
     unsigned char * blob;
     char *path, *destination;
+    size_t old_image_width;
     MagickBooleanType status;
     MagickWand *magick_wand;
 
@@ -120,39 +118,43 @@ unsigned char * process_image(char *source, size_t width, size_t height, float_t
     MagickWandGenesis();
     magick_wand = NewMagickWand();
 
+    //Keep track of the original image width
+    old_image_width = MagickGetImageWidth(magick_wand);
+
     //Allocate enough memory for image path
     path = malloc(sizeof(char *) * (strlen(IMAGE_DIR) + strlen(source) + 1));
     if(path == NULL){
         perror("Malloc");
         exit(EXIT_FAILURE);
     }
+
     //Concatenates relative path with image name
     sprintf(path, "%s%s", IMAGE_DIR, source);
     status = MagickReadImage(magick_wand, path);
     if (status == MagickFalse) {
         ThrowWandException(magick_wand);
     }
-
-    //Image resize only if the ua width is less than the original image
-    if(width < MagickGetImageWidth(magick_wand)){
-        resize_image(MagickFalse, magick_wand, width, height);
-    }
+    free(path);
 
     //Check if quality value was set
     if(quality != -1){
         //Image quality compression
         compress_image(status, magick_wand, quality);
     }
-    //Get the blob to return
-    blob = MagickGetImageBlob(magick_wand, newsize);
 
-    //This rename the image as the formats wants image-widthxheight.jpg
-    if(width < MagickGetImageWidth(magick_wand)){
+    //Image resize only if the ua width is less than the original image
+    if(width < old_image_width){
+        resize_image(MagickFalse, magick_wand, width, height);
+        //Name the new image
         destination = rename_file(source, width);
         //Write the image then destroy it.
         write_image(status, magick_wand, destination);
-        free(destination);
     }
+
+    //Get the blob to return
+    blob = MagickGetImageBlob(magick_wand, newsize);
+
+    //Destroy the magick wand
     DestroyMagickWand(magick_wand);
     MagickWandTerminus();
     return blob;
