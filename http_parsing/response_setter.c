@@ -149,7 +149,15 @@ void build_response(struct http_request *req, int conn) {
     }
     else if (search_files(IMAGE_DIR, req->uri)) {
 
-        double q = parse_weight(req->accept);
+        double q;
+        if (req->accept == NULL) {
+
+            q=1.0;
+
+        } else {
+
+            q = parse_weight(req->accept);
+        }
         char *u_a = parse_user_agent(req->user_agent);
         int rv;
         size_t width, height;
@@ -182,14 +190,14 @@ void build_response(struct http_request *req, int conn) {
         if (cache_check(CACHE, &cell, req->uri, q, height, width) != -1) {
 
             printf("CACHE HIT\n");
-            fbuffer = malloc(cell->length);
-            exit_on_error(fbuffer == NULL, "error in malloc");
-            memcpy(fbuffer, cell->pointer, cell->length);
             response = build_header(200, "image/jpeg", cell->length, req->version);
             hlen = strlen(response);
             memcpy(buff, response, hlen);
 
+            fbuffer = cell->pointer+sizeof(struct memory_cell);
             lenght = cell->length;
+
+
 
         } else {
 
@@ -213,8 +221,6 @@ void build_response(struct http_request *req, int conn) {
             exit_on_error(rv != 0, "error in pthread_mutex_unlock");
 
             lenght = *imgsize;
-            free(cell);
-
         }
 
     } else if (search_files(FILE_DIR, req->uri)) {
@@ -241,6 +247,7 @@ void build_response(struct http_request *req, int conn) {
         memcpy(buff, response, hlen);
 
     } else {
+
         response = build_header(404, " ", 0, req->version);
         hlen = strlen(response);
         memcpy(buff, response, hlen);
@@ -250,12 +257,11 @@ void build_response(struct http_request *req, int conn) {
         memcpy(buff + hlen, fbuffer, lenght);
     }
 
-    printf("\n%s\n", response);
+    printf("%s\n", response);
     write_response(buff, hlen + lenght, conn, req);
 
     free(buff);
     free(response);
-    free(fbuffer);
     free(imgsize);
     free(req);
 }

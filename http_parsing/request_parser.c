@@ -1,6 +1,7 @@
 #include "request_parser.h"
 
 double get_double(char *str) {
+    if (str == NULL) return 1.0;
     while (*str && !(isdigit(*str) || ((*str == '-' || *str == '+') && isdigit(*(str + 1)))))
         str++;
 
@@ -82,6 +83,7 @@ struct http_request *parse_request(char *str) {
     exit_on_error(request == NULL, "error in malloc");
 
     request->alive = 0;
+    request->accept = NULL;
     int len = (int)strlen(str);
     char *buff = malloc((len + 1));
     exit_on_error(buff == NULL, "error in malloc");
@@ -99,7 +101,7 @@ struct http_request *parse_request(char *str) {
         if (strstr(token, "User-Agent:") != NULL) {
             request->user_agent = token;
         }
-        if (strstr(token, "Accept:") != NULL) {
+        if (strstr(token, "Accept:") != NULL && strstr(token, "Accept: */*") != 0) {
             request->accept = token;
 
         }
