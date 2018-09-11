@@ -37,6 +37,6 @@ int cache_insert(char *cache, void *file, size_t file_length, char *name, double
                  size_t image_width);
 
 int cache_check(char *cache, struct memory_cell **cell, char *name, double quality_image,
-                unsigned int imageLength, unsigned int imageWidth);
+                size_t imageLength, size_t imageWidth);
 
 #endif //WEB_SERVER_CACHE_H
