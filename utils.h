@@ -24,7 +24,7 @@
 
 #define DIM_HEADER 300
 #define N_PAGES 100
-#define BUFFDIM 200000
+#define BUFFDIM 2000000 //TODO added a zero it should be dynamic
 
 #define IMAGE_DIR "../www/images"
 #define FILE_DIR "../www"
@@ -35,5 +35,6 @@ pthread_mutex_t mutex;
 void exit_on_error (int condition, const char * message);
 int readn(int conn, char *ptr, int n);
 ssize_t writen(int fd, const void *buf, size_t n);
+off_t get_file_size(int fd);
 
 #endif //WEB_SERVER_UTILS_H
