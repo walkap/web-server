@@ -14,10 +14,8 @@ size_t set_width(size_t width){
         width = MEDIUM_IMAGE;
     } else if(width > 768 && width <= 1024){
         width = LARGE_IMAGE;
-    } else if(width > 1024 && width <= 1280){
+    } else {
         width = XLARGE_IMAGE;
-    }else{
-        width = 1400;
     }
     return width;
 }
@@ -105,7 +103,7 @@ char *rename_file(const char *filename, size_t width) {
     //Copy the file name without the format into the array char
     strncpy(new_filename, filename, strlen(filename) - 4);
     //Add the image size and formate to the new file name array char
-    if( sprintf(new_filename + strlen(filename) - 4, "-%iw.jpg", (int) width) < 0){
+    if( sprintf(new_filename + strlen(filename) - 4, "-%iw.png", (int) width) < 0){
         perror("sprintf");
         exit(EXIT_FAILURE);
     }

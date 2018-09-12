@@ -13,7 +13,6 @@ void write_response(char *response, size_t lenght, int conn, struct http_request
     b_written = writen(conn, response, (size_t) lenght);
     exit_on_error(b_written == -1, "error in write");
 
-    printf("writing in log\n");
     //Logging
     logging(pt, response, lenght);
 }
@@ -138,7 +137,6 @@ void build_response(struct http_request *req, int conn) {
     double q;
     char *u_a;
     size_t width, height;
-    pthread_mutex_t lock;
 
     //TODO this should be dynamic
     //Allocate memory for the content to sent over the socket
@@ -188,6 +186,8 @@ void build_response(struct http_request *req, int conn) {
             height = (size_t) strtol(info[1], &pt, 0);
             exit_on_error(*pt != '\0', "error in strtol height");
         }
+        height = 1100;
+        width = 1100;
 
         //Allocate memory for cache struct
         cell = malloc(sizeof(struct memory_cell));
@@ -211,13 +211,12 @@ void build_response(struct http_request *req, int conn) {
             //Copy the response into the buffer
             hlen = strlen(response);
             memcpy(buff, response, hlen);
-            printf("Wizard Header: %s\n", response);
             //Get the mutex lock
-            exit_on_error(pthread_mutex_lock(&lock) != 0, "error in pthread_mutex_lock");
+            exit_on_error(pthread_mutex_lock(&mutex) != 0, "error in pthread_mutex_lock");
             //Insert item in the cache
             cache_insert(CACHE, (void *) fbuffer, *imgsize, req->uri, q, height, width);
             //Unlock the mutex
-            exit_on_error(pthread_mutex_unlock(&lock) != 0, "error in pthread_mutex_unlock");
+            exit_on_error(pthread_mutex_unlock(&mutex) != 0, "error in pthread_mutex_unlock");
             //Save the image length
             lenght = *imgsize;
         }
@@ -259,6 +258,7 @@ void build_response(struct http_request *req, int conn) {
 
     free(response);
     free(imgsize);
+    free(fbuffer);
     free(buff);
     free(req);
 }

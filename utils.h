@@ -24,7 +24,7 @@
 
 #define DIM_HEADER 300
 #define N_PAGES 100
-#define BUFFDIM 200000 //TODO added a zero it should be dynamic
+#define BUFFDIM 2000000 //TODO added a zero it should be dynamic
 
 #define IMAGE_DIR "../www/images"
 #define FILE_DIR "../www"
