@@ -1,4 +1,5 @@
 #include "ua_parsing.h"
+#include "../image_processing/image_processing.h"
 
 //Global provider
 static fiftyoneDegreesProvider provider;
@@ -77,9 +78,15 @@ int init_provider() {
  * @param info is used to save information device as an array of strings
  * @return Returns 0 in case of success, 1 if the device size is unknown
  */
-int get_info(const char *ua_str, const char **info) {
+void get_info(const char *ua_str, int info[], char* source) {
+    MagickBooleanType status;
+    MagickWand *magick_wand;
     //Values we want to return
-    const char *width, *height;
+    char *width, *height;
+    char *path = malloc(sizeof(char *) * (strlen(IMAGE_DIR) + strlen(source) + 1));
+    exit_on_error(path == NULL, "error in malloc");
+    //Concatenates relative path with image name
+    sprintf(path, "%s%s", IMAGE_DIR, source);
     //Allocate enough mem for hte two dimensions
     //const char **info = malloc(sizeof(char *) * 2);
     //Init provider
@@ -93,27 +100,56 @@ int get_info(const char *ua_str, const char **info) {
     //Sets the offsets structure passed to the method for the User-Agent provided (or use this provider.active->dataSet)
     fiftyoneDegreesSetDeviceOffset(dataSet, ua_str, 0, offsets->firstOffset);
     //Get device size
-    width = get_property(dataSet, offsets, "ScreenPixelsWidth");
-    height = get_property(dataSet, offsets, "ScreenPixelsHeight");
+    width = (char *)get_property(dataSet, offsets, "ScreenPixelsWidth");
+    height = (char *)get_property(dataSet, offsets, "ScreenPixelsHeight");
 
     //Check if device size are available, if not then return 1
     if(strcmp(width, UNKNOWN) == 0 || strcmp(height, UNKNOWN) == 0){
-        puts("The device size in unknown!");
-        return -1;
+
+        MagickWandGenesis();
+        magick_wand = NewMagickWand();
+        status = MagickReadImage(magick_wand, path);
+        if (status == MagickFalse) {
+            ThrowWandException(magick_wand);
+        }
+        free(path);
+        size_t original_width = MagickGetImageWidth(magick_wand);
+        size_t original_height = MagickGetImageHeight(magick_wand);
+
+        printf("original width: %lu\n", original_width);
+
+
+        info[0]= (int)original_width;
+        printf("info1: %d\n", info[0]);
+        info[1] = (int)original_height;
+        printf("info2: %d\n", info[1]);
+
+
+        DestroyMagickWand(magick_wand);
+        MagickWandTerminus();
+
+        fiftyoneDegreesFreeDeviceOffsets(offsets);
+
+        return;
     }
     //Initialize the element of the two values array
     //TODO check this if it works with images greater than 1200
     char *ptr;
     if(strtol(width, &ptr, 0) > 1200 || strtol(height, &ptr, 0) > 1200) {
-        info[0] = "1200";
-        info[1] = "1200";
+        info[0] = 1200;
+        info[1] = 1200;
     }else{
-        info[0] = width;
-        info[1] = height;
+        int w,h;
+        char *pt;
+        w =  (int) strtol(width, &pt, 0);
+        exit_on_error(*pt != '\0', "error in strtol width");
+        h =  (int) strtol(height, &pt, 0);
+        exit_on_error(*pt != '\0', "error in strtol height");
+        info[0] = w;
+        info[1] = h;
     }
     //free memory, offset and data set
     fiftyoneDegreesFreeDeviceOffsets(offsets);
-    return 0;
 }
 
 #if UA_PARSING_DEBUG

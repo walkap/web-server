@@ -133,7 +133,7 @@ void build_response(struct http_request *req, int conn) {
     size_t hlen = 0, lenght = 0;
 
     struct memory_cell *cell;
-    const char **info;
+    int info[2];
     double q;
     char *u_a;
     size_t width, height;
@@ -165,8 +165,8 @@ void build_response(struct http_request *req, int conn) {
         //Get the user agent from browser
         u_a = parse_user_agent(req->user_agent);
         //Allocate memory to store the images sizes
-        info = malloc(10 * sizeof(char));
-        exit_on_error(info == NULL, "error in malloc");
+       /* info = malloc(10 * sizeof(int));
+        exit_on_error(info == NULL, "error in malloc");*/
 
         printf("\nImage quality: %.2f\n", q);
         fflush(stdout);
@@ -176,18 +176,18 @@ void build_response(struct http_request *req, int conn) {
         //TODO this conditional should be deleted because is the ua in unknown the size should be the original one
         //TODO SEE set_with function that does the job
         //Get image sizes from the user agent
-        if (get_info(u_a, info) == -1) {
-            height = 1200;
-            width = 1200;
-        } else {
-            char *pt;
+         get_info(u_a, info, req->uri);
+
+            width = (size_t) info[0];
+            height = (size_t) info[1];
+
+
+        /*char *pt;
             width = (size_t) strtol(info[0], &pt, 0);
             exit_on_error(*pt != '\0', "error in strtol width");
             height = (size_t) strtol(info[1], &pt, 0);
-            exit_on_error(*pt != '\0', "error in strtol height");
-        }
-        height = 1100;
-        width = 1100;
+            exit_on_error(*pt != '\0', "error in strtol height");*/
+
 
         //Allocate memory for cache struct
         cell = malloc(sizeof(struct memory_cell));
@@ -257,8 +257,6 @@ void build_response(struct http_request *req, int conn) {
     write_response(buff, hlen + lenght, conn, req);
 
     free(response);
-    free(imgsize);
-    free(fbuffer);
     free(buff);
     free(req);
 }

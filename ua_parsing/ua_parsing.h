@@ -9,7 +9,7 @@
 #define PROPERTIES "ScreenPixelsWidth,ScreenPixelsHeight,PlatformName,IsMobile"
 #define UNKNOWN "Unknown"
 
-int get_info(const char *ua_str, const char **info);
+void get_info(const char *ua_str, int info[], char* path);
 
 //TODO this is just for testing should be deleted as soon as we can
 /*const char* mobileUserAgent = ("Mozilla/5.0 (iPhone; CPU iPhone OS 7_1 like Mac OS X) "
