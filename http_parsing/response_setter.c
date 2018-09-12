@@ -13,6 +13,7 @@ void write_response(char *response, size_t lenght, int conn, struct http_request
     b_written = writen(conn, response, (size_t) lenght);
     exit_on_error(b_written == -1, "error in write");
 
+    printf("writing in log\n");
     //Logging
     logging(pt, response, lenght);
 }
@@ -104,7 +105,6 @@ char *build_header(int status, char *type, size_t len, char *version) {
                  "%s 200 OK\r\nContent-Type: %s\r\nContent-Length: %lu\r\nConnection: keep-alive\r\n\r\n", version,
                  type,
                  len);
-        fflush(stdout);
 
     } else if (status == 400) {
         snprintf(buff, DIM_HEADER,
@@ -128,14 +128,14 @@ char *build_header(int status, char *type, size_t len, char *version) {
  * @param conn
  */
 void build_response(struct http_request *req, int conn) {
-    char *fbuffer = NULL, *response, *buff;
+    char *fbuffer = NULL, *response;
+    char *buff = NULL;
     size_t *imgsize;
     size_t hlen = 0, lenght = 0;
 
     struct memory_cell *cell;
     const char **info;
     double q;
-    int rv;
     char *u_a;
     size_t width, height;
     pthread_mutex_t lock;
@@ -155,8 +155,9 @@ void build_response(struct http_request *req, int conn) {
         //Build header response
         response = build_header(400, "text/html", (int) lenght, req->version);
         exit_on_error(response == NULL, "error in build header");
+        hlen = strlen(response);
         //Copy the header response in the buffer
-        memcpy(buff, response, strlen(response));
+        memcpy(buff, response, hlen);
     } else if (search_files(IMAGE_DIR, req->uri)) { //Search an image
         if (req->accept == NULL) {
             q = 1.0;
@@ -195,8 +196,9 @@ void build_response(struct http_request *req, int conn) {
         //Check whether an image is in the cache or not
         if (cache_check(CACHE, &cell, req->uri, q, height, width) != -1) {
             printf("CACHE HIT\n");
-            response = build_header(200, "image/jpeg", cell->length, req->version);
-            memcpy(buff, response, strlen(response));
+            response = build_header(200, "image/png", cell->length, req->version);
+            hlen = strlen(response);
+            memcpy(buff, response, hlen);
             fbuffer = cell->pointer + sizeof(struct memory_cell);
             lenght = cell->length;
         } else {
@@ -205,11 +207,11 @@ void build_response(struct http_request *req, int conn) {
             //Process an image with the new width and quality
             fbuffer = (char *) process_image(req->uri, width, (float_t) q, imgsize);
             //Once get the image from the script create a response
-            response = build_header(200, "image/jpeg", *imgsize, req->version);
+            response = build_header(200, "image/png", *imgsize, req->version);
             //Copy the response into the buffer
-            memcpy(buff, response, strlen(response));
-            printf("Inserting\n");
-            //TODO where is it declared the mutex (pthread_mutex_t)? and should not be initialized with pthread_mutex_init?
+            hlen = strlen(response);
+            memcpy(buff, response, hlen);
+            printf("Wizard Header: %s\n", response);
             //Get the mutex lock
             exit_on_error(pthread_mutex_lock(&lock) != 0, "error in pthread_mutex_lock");
             //Insert item in the cache
@@ -218,7 +220,6 @@ void build_response(struct http_request *req, int conn) {
             exit_on_error(pthread_mutex_unlock(&lock) != 0, "error in pthread_mutex_unlock");
             //Save the image length
             lenght = *imgsize;
-            free(imgsize);
         }
 
     } else if (search_files(FILE_DIR, req->uri)) {
@@ -235,8 +236,6 @@ void build_response(struct http_request *req, int conn) {
             type = "text/html";
         } else if (strstr(req->uri, ".js") != NULL) {
             type = "application/javascript";
-        } else if (strstr(req->uri, ".jpg") != NULL) {
-            type = "image/jpeg";
         }
 
         response = build_header(200, type, lenght, req->version);
@@ -256,9 +255,10 @@ void build_response(struct http_request *req, int conn) {
     }
 
     printf("%s\n", response);
-    free(response);
     write_response(buff, hlen + lenght, conn, req);
 
+    free(response);
+    free(imgsize);
     free(buff);
     free(req);
 }

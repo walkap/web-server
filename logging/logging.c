@@ -20,9 +20,8 @@ void logging(struct http_request *pt, char *str, size_t lenght) {
     char *s = " ";
     char *response;
 
-    strtok(str, s);
     s = "\r";
-    response = strtok(NULL, s);
+    response = strtok(str, s);
 
     time_t t = time(NULL);
     struct tm tm = *localtime(&t);

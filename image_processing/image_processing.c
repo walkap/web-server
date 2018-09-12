@@ -163,6 +163,7 @@ unsigned char *process_image(char *source, size_t width, float_t quality, size_t
         //Write the image then destroy it.
         write_image(status, magick_wand, destination);
     }
+
     //Get the blob to return
     blob = MagickGetImageBlob(magick_wand, newsize);
     //Destroy the magick wand
