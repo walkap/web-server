@@ -22,7 +22,7 @@ void write_response(char *response, size_t lenght, int conn, struct http_request
  * @param filename
  * @return
  */
-int search_files(char *dir, char *filename) {
+int is_file_present(char *dir, char *filename) {
     FILE *file;
     char *path;
 
@@ -156,7 +156,9 @@ void build_response(struct http_request *req, int conn) {
         hlen = strlen(response);
         //Copy the header response in the buffer
         memcpy(buff, response, hlen);
-    } else if (search_files(IMAGE_DIR, req->uri)) { //Search an image
+    } else if (is_file_present(IMAGE_DIR, req->uri)) { //Search an image
+        //TODO this is not good we should check in the cache before then on the file system
+        //TODO if the image size is not present then call image_process if the original image exists
         if (req->accept == NULL) {
             q = 1.0;
         } else {
@@ -165,34 +167,26 @@ void build_response(struct http_request *req, int conn) {
         //Get the user agent from browser
         u_a = parse_user_agent(req->user_agent);
         //Allocate memory to store the images sizes
-       /* info = malloc(10 * sizeof(int));
-        exit_on_error(info == NULL, "error in malloc");*/
-
+        /* info = malloc(10 * sizeof(int));
+         exit_on_error(info == NULL, "error in malloc");*/
         printf("\nImage quality: %.2f\n", q);
         fflush(stdout);
         printf("\nUser agent: %s\n", u_a);
         fflush(stdout);
-
         //TODO this conditional should be deleted because is the ua in unknown the size should be the original one
         //TODO SEE set_with function that does the job
         //Get image sizes from the user agent
-         get_info(u_a, info, req->uri);
-
-            width = (size_t) info[0];
-            height = (size_t) info[1];
-
-
+        get_info(u_a, info, req->uri);
+        width = (size_t) info[0];
+        height = (size_t) info[1];
         /*char *pt;
             width = (size_t) strtol(info[0], &pt, 0);
             exit_on_error(*pt != '\0', "error in strtol width");
             height = (size_t) strtol(info[1], &pt, 0);
             exit_on_error(*pt != '\0', "error in strtol height");*/
-
-
         //Allocate memory for cache struct
         cell = malloc(sizeof(struct memory_cell));
         exit_on_error(cell == NULL, "error in malloc");
-
         //Check whether an image is in the cache or not
         if (cache_check(CACHE, &cell, req->uri, q, height, width) != -1) {
             printf("CACHE HIT\n");
@@ -207,7 +201,7 @@ void build_response(struct http_request *req, int conn) {
             //Process an image with the new width and quality
             fbuffer = (char *) process_image(req->uri, width, (float_t) q, imgsize);
             //Once get the image from the script create a response
-            response = build_header(200, "image/png", *imgsize, req->version);
+            response = build_header(200, "image/jpeg", *imgsize, req->version);
             //Copy the response into the buffer
             hlen = strlen(response);
             memcpy(buff, response, hlen);
@@ -220,15 +214,13 @@ void build_response(struct http_request *req, int conn) {
             //Save the image length
             lenght = *imgsize;
         }
-
-    } else if (search_files(FILE_DIR, req->uri)) {
+    } else if (is_file_present(FILE_DIR, req->uri)) {
         //TODO why search a file and just after check if is an image or file? We should do this before
         //TODO also if is an image we cannot find it in the FILE_DIR
         //TODO so we should first check what kind of file then process
         //TODO and we don't need FILE_DIR and IMAGE_DIR because in the request there is also the folder so we just need the root folder
         char *type = NULL;
         fbuffer = read_file(FILE_DIR, req->uri, &lenght);
-
         if (strstr(req->uri, ".css") != NULL) {
             type = "text/css";
         } else if (strstr(req->uri, ".html") != NULL) {
@@ -236,26 +228,21 @@ void build_response(struct http_request *req, int conn) {
         } else if (strstr(req->uri, ".js") != NULL) {
             type = "application/javascript";
         }
-
         response = build_header(200, type, lenght, req->version);
         exit_on_error(response == NULL, "error in build header");
-
         hlen = strlen(response);
         memcpy(buff, response, hlen);
-
     } else {
         response = build_header(404, " ", 0, req->version);
         hlen = strlen(response);
         memcpy(buff, response, hlen);
     }
-
+    //Check the method //TODO what if is false?
     if (strcmp(req->method, "GET") == 0) {
         memcpy(buff + hlen, fbuffer, lenght);
     }
-
     printf("%s\n", response);
     write_response(buff, hlen + lenght, conn, req);
-
     free(response);
     free(buff);
     free(req);
@@ -270,20 +257,15 @@ void build_response(struct http_request *req, int conn) {
 int set_response(char *str, int conn) {
     int alive = 0;
     struct http_request *request;
-
     request = parse_request(str);
-
     if (request->alive) {
         alive = 1;
     }
     request->invalid_request = 0;
-
     if (strcmp(request->method, "GET") != 0 &&
         strcmp(request->method, "HEAD") != 0) {
         request->invalid_request = 1;
     }
-
     build_response(request, conn);
-
     return alive;
 }
