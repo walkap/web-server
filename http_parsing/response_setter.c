@@ -98,24 +98,26 @@ char *build_header(int status, char *type, size_t len, char *version) {
     buff = malloc(sizeof(char) * DIM_HEADER);
     exit_on_error(buff == NULL, "error in malloc");
 
-    if (status == 200) {
-        //TODO define macros for string like content-type
-        snprintf(buff, DIM_HEADER,
-                 "%s 200 OK\r\nContent-Type: %s\r\nContent-Length: %lu\r\nConnection: keep-alive\r\n\r\n", version,
-                 type,
-                 len);
+    switch (status){
+        case 200:
+            snprintf(buff, DIM_HEADER,
+                     "%s 200 OK\r\nContent-Type: %s\r\nContent-Length: %lu\r\nConnection: keep-alive\r\n\r\n", version,
+                     type,
+                     len);
+            break;
+        case 400:
+            snprintf(buff, DIM_HEADER,
+                     "%s 400 Bad Request\r\nContent-Type: %s\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n", version,
+                     type, len);
+            break;
+        case 404:
+            snprintf(buff, DIM_HEADER,
+                     "%s 404 Not Found\r\nConnection: close\r\n\r\n",
+                     version);
+            break;
+        default:
+            break;
 
-    } else if (status == 400) {
-        snprintf(buff, DIM_HEADER,
-                 "%s 400 Bad Request\r\nContent-Type: %s\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n", version,
-                 type, len);
-
-    } else if (status == 404) {
-        snprintf(buff, DIM_HEADER,
-                 "%s 404 Not Found\r\nConnection: close\r\n\r\n",
-                 version);
-    } else {
-        return NULL;
     }
     return buff;
 }
@@ -247,6 +249,7 @@ void build_response(struct http_request *req, int conn) {
     free(buff);
     free(req);
 }
+
 
 /**
  * This method is used to specify if the request has a valid sintax and then builds a response
