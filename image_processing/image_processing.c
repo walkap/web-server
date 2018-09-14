@@ -5,14 +5,14 @@
  * @param width
  * @return The new width
  */
-size_t set_width(size_t width){
-    if(width <= 320){
+size_t set_width(size_t width) {
+    if (width <= 320) {
         width = XSMALL_IMAGE;
-    } else if(width > 320 && width <= 480){
+    } else if (width > 320 && width <= 480) {
         width = SMALL_IMAGE;
-    } else if(width > 480 && width <= 768){
+    } else if (width > 480 && width <= 768) {
         width = MEDIUM_IMAGE;
-    } else if(width > 768 && width <= 1024){
+    } else if (width > 768 && width <= 1024) {
         width = LARGE_IMAGE;
     } else {
         width = XLARGE_IMAGE;
@@ -70,7 +70,7 @@ void compress_image(MagickBooleanType status, MagickWand *magick_wand, float_t q
  */
 void write_image(MagickBooleanType status, MagickWand *magick_wand, char *filename) {
     char *target = malloc(strlen(IMAGE_DIR) + strlen(filename) + 1);
-    if(target == NULL){
+    if (target == NULL) {
         perror("malloc");
         exit(EXIT_FAILURE);
     }
@@ -96,14 +96,14 @@ char *rename_file(const char *filename, size_t width) {
     char *new_filename;
     //Initialize array char to contain the complete new filename and the format
     new_filename = calloc(strlen(filename), (sizeof(char)));
-    if(new_filename == NULL){
+    if (new_filename == NULL) {
         perror("malloc");
         exit(EXIT_FAILURE);
     }
     //Copy the file name without the format into the array char
     strncpy(new_filename, filename, strlen(filename) - 4);
     //Add the image size and formate to the new file name array char
-    if( sprintf(new_filename + strlen(filename) - 4, "-%iw.jpg", (int) width) < 0){
+    if (sprintf(new_filename + strlen(filename) - 4, "-%iw.jpg", (int) width) < 0) {
         perror("sprintf");
         exit(EXIT_FAILURE);
     }
@@ -121,9 +121,8 @@ char *rename_file(const char *filename, size_t width) {
  * @return A blob to the image file
  */
 unsigned char *process_image(char *source, size_t width, float_t quality, size_t *newsize) {
-    unsigned char * blob;
+    unsigned char *blob;
     char *path, *destination;
-    size_t old_image_width;
     MagickBooleanType status;
     MagickWand *magick_wand;
 
@@ -132,7 +131,7 @@ unsigned char *process_image(char *source, size_t width, float_t quality, size_t
     magick_wand = NewMagickWand();
     //Allocate enough memory for image path
     path = malloc(sizeof(char *) * (strlen(IMAGE_DIR) + strlen(source) + 1));
-    if(path == NULL){
+    if (path == NULL) {
         perror("Malloc");
         exit(EXIT_FAILURE);
     }
@@ -143,24 +142,19 @@ unsigned char *process_image(char *source, size_t width, float_t quality, size_t
         ThrowWandException(magick_wand);
     }
     free(path);
-    //Keep track of the original image width
-    old_image_width = MagickGetImageWidth(magick_wand);
     //Check if quality value was set
-    if(quality != -1){
+    if (quality != -1) {
         //Image quality compression
         compress_image(status, magick_wand, quality);
     }
-    //Image resize only if the ua width is less than the original image
-    if(width < old_image_width){
-        //Set the right size based on some standard values
-        width = set_width(width);
-        //Resize the image with the new width
-        resize_image(MagickFalse, magick_wand, width);
-        //Name the new image
-        destination = rename_file(source, width);
-        //Write the image then destroy it.
-        write_image(status, magick_wand, destination);
-    }
+    //Set the right size based on some standard values
+    width = set_width(width);
+    //Resize the image with the new width
+    resize_image(MagickFalse, magick_wand, width);
+    //Name the new image
+    destination = rename_file(source, width);
+    //Write the image then destroy it.
+    write_image(status, magick_wand, destination);
 
     //Get the blob to return
     blob = MagickGetImageBlob(magick_wand, newsize);
@@ -174,6 +168,6 @@ unsigned char *process_image(char *source, size_t width, float_t quality, size_t
 int main() {
     size_t *imgsize = malloc(sizeof(size_t));
     //TODO we don't need height at all
-    process_image("/wizard.jpg", 1040, 0.5, imgsize);
+    process_image("/wizard.jpg", 1025,1, imgsize);
 }
 #endif

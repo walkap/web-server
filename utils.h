@@ -23,7 +23,7 @@
 #include <ImageMagick-7/MagickWand/MagickWand.h>
 
 #define DIM_HEADER 300
-#define N_PAGES 100
+#define N_PAGES 10000
 #define BUFFDIM 2000000 //TODO added a zero it should be dynamic
 
 #define IMAGE_DIR "../www/images"

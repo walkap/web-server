@@ -98,7 +98,7 @@ char *build_header(int status, char *type, size_t len, char *version) {
     buff = malloc(sizeof(char) * DIM_HEADER);
     exit_on_error(buff == NULL, "error in malloc");
 
-    switch (status){
+    switch (status) {
         case 200:
             snprintf(buff, DIM_HEADER,
                      "%s 200 OK\r\nContent-Type: %s\r\nContent-Length: %lu\r\nConnection: keep-alive\r\n\r\n", version,
@@ -107,7 +107,8 @@ char *build_header(int status, char *type, size_t len, char *version) {
             break;
         case 400:
             snprintf(buff, DIM_HEADER,
-                     "%s 400 Bad Request\r\nContent-Type: %s\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n", version,
+                     "%s 400 Bad Request\r\nContent-Type: %s\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
+                     version,
                      type, len);
             break;
         case 404:
@@ -123,27 +124,63 @@ char *build_header(int status, char *type, size_t len, char *version) {
 }
 
 /**
+ * This function return the original name from a requested image
+ * @param requested_name
+ * @return
+ */
+char * get_original_image_name(char *requested_name) {
+    char *token, *new_name, *delimiter;
+
+    delimiter = "-";
+    token = strtok(requested_name, delimiter);
+    if (token == NULL) {
+        perror("Token");
+        exit(EXIT_FAILURE);
+    }
+    new_name = malloc(strlen(token) + 5);
+    sprintf(new_name, "%s%s", token, ".jpg");
+    printf("%s\n", new_name);
+    return new_name;
+}
+
+/**
+ * This function parse the image name from request returnig the width of the image in order
+ * to respect the structure name-widthw.jpg
+ * @param str the image name
+ * @return integer
+ */
+int parse_width(char *str) {
+    char *token1, *token2, *pt, *s;
+    int w;
+
+    s = "-";
+    strtok(str, s);
+    token1 = strtok(NULL, s);
+    s = "w";
+    token2 = strtok(token1, s);
+    w = (int) strtol(token2, &pt, 0);
+    exit_on_error(*pt != '\0', "error in strtol width");
+    return w;
+}
+
+/**
  * This method builds an http response message according to the uri requested. If the uri is an image,
  * the cache is checked, if the image is not in the cache, it is processed, saved in cache and sent in the response.
  * @param req
  * @param conn
  */
 void build_response(struct http_request *req, int conn) {
-    char *fbuffer = NULL, *response;
-    char *buff = NULL;
-    size_t *imgsize;
-    size_t hlen = 0, lenght = 0;
 
+    char *u_a, *header_response = NULL, *body_buffer = NULL, *full_buffer = NULL, *type = NULL, *original_image_name;
     struct memory_cell *cell;
     int info[2];
     double q;
-    char *u_a;
-    size_t width, height;
+    size_t header_lenght = 0, body_lenght = 0, width, height;
+    size_t *imgsize;
 
-    //TODO this should be dynamic
     //Allocate memory for the content to sent over the socket
-    buff = malloc(BUFFDIM);
-    exit_on_error(buff == NULL, "error in malloc");
+    full_buffer = malloc(BUFFDIM);
+    exit_on_error(full_buffer == NULL, "error in malloc");
 
     //Allocate memory to store the image size pointer
     imgsize = malloc(sizeof(size_t));
@@ -151,16 +188,15 @@ void build_response(struct http_request *req, int conn) {
 
     if (req->invalid_request) {
         //Read the file and get the file lenght
-        fbuffer = read_file(FILE_DIR, "/400.html", &lenght);
-        //Build header response
-        response = build_header(400, "text/html", (int) lenght, req->version);
-        exit_on_error(response == NULL, "error in build header");
-        hlen = strlen(response);
-        //Copy the header response in the buffer
-        memcpy(buff, response, hlen);
-    } else if (is_file_present(IMAGE_DIR, req->uri)) { //Search an image
-        //TODO this is not good we should check in the cache before then on the file system
-        //TODO if the image size is not present then call image_process if the original image exists
+        body_buffer = read_file(FILE_DIR, "/400.html", &body_lenght);
+        //Build header header_response
+        header_response = build_header(400, "text/html", (int) body_lenght, req->version);
+        exit_on_error(header_response == NULL, "error in build header");
+        header_lenght = strlen(header_response);
+        //Copy the header header_response in the buffer
+        memcpy(full_buffer, header_response, header_lenght);
+        //Check if the request is an image
+    } else if (strstr(req->uri, ".jpg") != NULL) {
         if (req->accept == NULL) {
             q = 1.0;
         } else {
@@ -168,88 +204,102 @@ void build_response(struct http_request *req, int conn) {
         }
         //Get the user agent from browser
         u_a = parse_user_agent(req->user_agent);
-        //Allocate memory to store the images sizes
-        /* info = malloc(10 * sizeof(int));
-         exit_on_error(info == NULL, "error in malloc");*/
-        printf("\nImage quality: %.2f\n", q);
-        fflush(stdout);
-        printf("\nUser agent: %s\n", u_a);
-        fflush(stdout);
-        //TODO this conditional should be deleted because is the ua in unknown the size should be the original one
-        //TODO SEE set_with function that does the job
         //Get image sizes from the user agent
-        get_info(u_a, info, req->uri);
-        width = (size_t) info[0];
-        height = (size_t) info[1];
-        /*char *pt;
-            width = (size_t) strtol(info[0], &pt, 0);
-            exit_on_error(*pt != '\0', "error in strtol width");
-            height = (size_t) strtol(info[1], &pt, 0);
-            exit_on_error(*pt != '\0', "error in strtol height");*/
+        if(get_screen_size_ua(u_a, info) == 0){
+            width = (size_t )parse_width(req->uri);
+            height = width;
+        }else{
+            width = (size_t) info[0];
+            height = (size_t) info[1];
+        }
         //Allocate memory for cache struct
-        cell = malloc(sizeof(struct memory_cell));
-        exit_on_error(cell == NULL, "error in malloc");
+        //cell = malloc(sizeof(struct memory_cell));
+        //exit_on_error(cell == NULL, "error in malloc");
         //Check whether an image is in the cache or not
-        if (cache_check(CACHE, &cell, req->uri, q, height, width) != -1) {
+        //TODO we disabled the cache temporarly
+        if ((cache_check(CACHE, &cell, req->uri, q, height, width) != -1) && (1 == 0) ) {
             printf("CACHE HIT\n");
-            response = build_header(200, "image/png", cell->length, req->version);
-            hlen = strlen(response);
-            memcpy(buff, response, hlen);
-            fbuffer = cell->pointer + sizeof(struct memory_cell);
-            lenght = cell->length;
+            body_buffer = cell->pointer;
+            body_lenght = cell->length;
+            header_response = build_header(200, "image/jpeg", cell->length, req->version);
+            memcpy(full_buffer, header_response, strlen(header_response));
         } else {
-            printf("In process\n");
-            //TODO here should placed a condition to check on file system if the image exists before process it
-            //Process an image with the new width and quality
-            fbuffer = (char *) process_image(req->uri, width, (float_t) q, imgsize);
-            //Once get the image from the script create a response
-            response = build_header(200, "image/jpeg", *imgsize, req->version);
-            //Copy the response into the buffer
-            hlen = strlen(response);
-            memcpy(buff, response, hlen);
-            //Get the mutex lock
-            exit_on_error(pthread_mutex_lock(&mutex) != 0, "error in pthread_mutex_lock");
-            //Insert item in the cache
-            cache_insert(CACHE, (void *) fbuffer, *imgsize, req->uri, q, height, width);
-            //Unlock the mutex
-            exit_on_error(pthread_mutex_unlock(&mutex) != 0, "error in pthread_mutex_unlock");
-            //Save the image length
-            lenght = *imgsize;
+            //puts("CACHE MISS\n");
+            //Check if the image is on the file system
+            if (is_file_present(IMAGE_DIR, req->uri)) {
+                //Get the image
+                body_buffer = read_file(IMAGE_DIR, req->uri, &body_lenght);
+                header_response = build_header(200, "image/jpeg", body_lenght, req->version);
+                header_lenght = strlen(header_response);
+                memcpy(full_buffer, header_response, header_lenght);
+            } else {
+                //Check if the original exists
+                original_image_name = get_original_image_name(req->uri);
+                if (is_file_present(IMAGE_DIR, original_image_name)) {
+                    printf("In process\n");
+                    //TODO here should placed a condition to check on file system if the image exists before process it
+                    //Process an image with the new width and quality
+                    body_buffer = (char *) process_image(original_image_name, width, (float_t) q, imgsize);
+                    //Once get the image from the script create a response
+                    header_response = build_header(200, "image/jpeg", *imgsize, req->version);
+                    //Copy the response into the buffer
+                    header_lenght = strlen(header_response);
+                    memcpy(full_buffer, header_response, header_lenght);
+                    //TODO we disabled the lock temporarly
+                    //Get the mutex lock
+                    //exit_on_error(pthread_mutex_lock(&mutex) != 0, "error in pthread_mutex_lock");
+                    //Insert item in the cache
+                    //cache_insert(CACHE, (void *) body_buffer, *imgsize, req->uri, q, height, width);
+                    //Unlock the mutex
+                    //exit_on_error(pthread_mutex_unlock(&mutex) != 0, "error in pthread_mutex_unlock");
+                    //Save the image length
+                    body_lenght = *imgsize;
+                }
+                free(original_image_name);
+                //TODO what else?
+            }
         }
-    } else if (is_file_present(FILE_DIR, req->uri)) {
-        //TODO why search a file and just after check if is an image or file? We should do this before
-        //TODO also if is an image we cannot find it in the FILE_DIR
-        //TODO so we should first check what kind of file then process
-        //TODO and we don't need FILE_DIR and IMAGE_DIR because in the request there is also the folder so we just need the root folder
-        char *type = NULL;
-        fbuffer = read_file(FILE_DIR, req->uri, &lenght);
-        if (strstr(req->uri, ".css") != NULL) {
-            type = "text/css";
-        } else if (strstr(req->uri, ".html") != NULL) {
-            type = "text/html";
-        } else if (strstr(req->uri, ".js") != NULL) {
-            type = "application/javascript";
-        }
-        response = build_header(200, type, lenght, req->version);
-        exit_on_error(response == NULL, "error in build header");
-        hlen = strlen(response);
-        memcpy(buff, response, hlen);
     } else {
-        response = build_header(404, " ", 0, req->version);
-        hlen = strlen(response);
-        memcpy(buff, response, hlen);
+        //Check whether a file is present or not
+        if (is_file_present(FILE_DIR, req->uri)) {
+            //TODO could we save the file type in the structure and move the complexity to the parses?
+            //Check the kind of file requested
+            if (strstr(req->uri, ".css") != NULL) {
+                type = "text/css";
+            } else if (strstr(req->uri, ".html") != NULL) {
+                type = "text/html";
+            } else if (strstr(req->uri, ".js") != NULL) {
+                type = "application/javascript";
+            }
+            //Read the file will be our body
+            body_buffer = read_file(FILE_DIR, req->uri, &body_lenght);
+            //Build the header header_response
+            header_response = build_header(200, type, body_lenght, req->version);
+            exit_on_error(header_response == NULL, "error in build header");
+            //Free the memory allocated for the type char pointer
+            header_lenght = strlen(header_response);
+            //Copy the header_response result in the buffer
+            memcpy(full_buffer, header_response, header_lenght);
+        } else {
+            header_response = build_header(404, " ", 0, req->version);
+            header_lenght = strlen(header_response);
+            memcpy(full_buffer, header_response, header_lenght);
+        }
     }
-    //Check the method //TODO what if is false?
+    //Check the method if is not GET it is HEAD and we do not attach the body in the request
     if (strcmp(req->method, "GET") == 0) {
-        memcpy(buff + hlen, fbuffer, lenght);
+        memcpy(full_buffer + header_lenght, body_buffer, body_lenght);
     }
-    printf("%s\n", response);
-    write_response(buff, hlen + lenght, conn, req);
-    free(response);
-    free(buff);
-    free(req);
-}
+    printf("Print out the header_response\n%s\n", header_response);
+    write_response(full_buffer, header_lenght + body_lenght, conn, req);
 
+    //TODO what about this free??
+    /*free(header_response);
+    free(full_buffer);
+    free(imgsize);
+    free(type);*/
+
+}
 
 /**
  * This method is used to specify if the request has a valid sintax and then builds a response

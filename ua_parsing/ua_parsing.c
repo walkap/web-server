@@ -72,21 +72,18 @@ int init_provider() {
     return 0;
 }
 
+
 /**
  * This function get the device information about the screen size
  * @param ua_str The user agent string should be passed
  * @param info is used to save information device as an array of strings
  * @return Returns 0 in case of success, 1 if the device size is unknown
  */
-void get_info(const char *ua_str, int info[], char* source) {
-    MagickBooleanType status;
-    MagickWand *magick_wand;
+int get_screen_size_ua(const char *ua_str, int *info) {
+
     //Values we want to return
     char *width, *height;
-    char *path = malloc(sizeof(char *) * (strlen(IMAGE_DIR) + strlen(source) + 1));
-    exit_on_error(path == NULL, "error in malloc");
-    //Concatenates relative path with image name
-    sprintf(path, "%s%s", IMAGE_DIR, source);
+
     //Allocate enough mem for hte two dimensions
     //const char **info = malloc(sizeof(char *) * 2);
     //Init provider
@@ -105,37 +102,17 @@ void get_info(const char *ua_str, int info[], char* source) {
 
     //Check if device size are available, if not then return 1
     if(strcmp(width, UNKNOWN) == 0 || strcmp(height, UNKNOWN) == 0){
+        puts("The device size in unknown!");
 
-        MagickWandGenesis();
-        magick_wand = NewMagickWand();
-        status = MagickReadImage(magick_wand, path);
-        if (status == MagickFalse) {
-            ThrowWandException(magick_wand);
-        }
-        free(path);
-        size_t original_width = MagickGetImageWidth(magick_wand);
-        size_t original_height = MagickGetImageHeight(magick_wand);
-
-        printf("original width: %lu\n", original_width);
-
-
-        info[0]= (int)original_width;
-        printf("info1: %d\n", info[0]);
-        info[1] = (int)original_height;
-        printf("info2: %d\n", info[1]);
-
-
-        DestroyMagickWand(magick_wand);
-        MagickWandTerminus();
-
+        //free memory, offset and data set
         fiftyoneDegreesFreeDeviceOffsets(offsets);
-
-        return;
+        return 0;
     }
+
     //Initialize the element of the two values array
     //TODO check this if it works with images greater than 1200
     char *ptr;
-    if(strtol(width, &ptr, 0) > 1200 || strtol(height, &ptr, 0) > 1200) {
+    if(strtol(width, &ptr, 0) > 1280 || strtol(height, &ptr, 0) > 1200) {
         info[0] = 1200;
         info[1] = 1200;
     }else{
@@ -148,15 +125,18 @@ void get_info(const char *ua_str, int info[], char* source) {
         info[0] = w;
         info[1] = h;
     }
+
     //free memory, offset and data set
     fiftyoneDegreesFreeDeviceOffsets(offsets);
+
+    return 1;
 }
 
 #if UA_PARSING_DEBUG
 int main(int argc, char *argv[]) {
     const char **info = malloc(sizeof(char *) * 2);
     int value = get_info("User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:61.0) Gecko/20100101 Firefox/61.0", info);
-    //int value = get_info(mobileUserAgent, info);
+    //int value = get_screen_size_ua(mobileUserAgent, info);
     if(value == 0){
         printf("The image size is: %sx%s", info[0], info[1]);
     }
