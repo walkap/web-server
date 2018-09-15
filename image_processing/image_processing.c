@@ -158,8 +158,9 @@ unsigned char *process_image(char *source, size_t width, float_t quality, size_t
 
     //Get the blob to return
     blob = MagickGetImageBlob(magick_wand, newsize);
+
     //Destroy the magick wand
-    DestroyMagickWand(magick_wand);
+    //DestroyMagickWand(magick_wand); //TODO disable to avoid an error
     MagickWandTerminus();
     return blob;
 }
