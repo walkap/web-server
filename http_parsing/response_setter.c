@@ -14,7 +14,7 @@ void write_response(char *response, size_t lenght, int conn, struct http_request
     exit_on_error(b_written == -1, "error in write");
 
     //Logging
-    logging(pt, response, lenght);
+    logging(pt, response);
 }
 
 /**
@@ -130,9 +130,10 @@ char *build_header(int status, char *type, size_t len, char *version) {
  */
 char * get_original_image_name(char *requested_name) {
     char *token, *new_name, *delimiter;
-
+    char *var = requested_name;
     delimiter = "-";
-    token = strtok(requested_name, delimiter);
+
+    token = strtok(var, delimiter);
     if (token == NULL) {
         perror("Token");
         exit(EXIT_FAILURE);
@@ -150,17 +151,16 @@ char * get_original_image_name(char *requested_name) {
  * @return integer
  */
 int parse_width(char *str) {
-    char *token1, *token2, *pt, *s;
-    int w;
+    char *token1, *token2, *pt;
+    int output;
 
-    s = "-";
-    strtok(str, s);
-    token1 = strtok(NULL, s);
-    s = "w";
-    token2 = strtok(token1, s);
-    w = (int) strtol(token2, &pt, 0);
+    strtok(str, "-");
+    token1 = strtok(NULL, "-");
+    token2 = strtok(token1, "w");
+    output = (int) strtol(token2, &pt, 0);
     exit_on_error(*pt != '\0', "error in strtol width");
-    return w;
+
+    return output;
 }
 
 /**
@@ -204,9 +204,12 @@ void build_response(struct http_request *req, int conn) {
         }
         //Get the user agent from browser
         u_a = parse_user_agent(req->user_agent);
+
+
+
         //Get image sizes from the user agent
         if(get_screen_size_ua(u_a, info) == 0){
-            width = (size_t )parse_width(req->uri);
+            width = (size_t ) parse_width(req->uri);
             height = width;
         }else{
             width = (size_t) info[0];
@@ -217,7 +220,7 @@ void build_response(struct http_request *req, int conn) {
         exit_on_error(cell == NULL, "error in malloc");
         //Check whether an image is in the cache or not
         //TODO we disabled the cache temporarly
-        if (cache_check(CACHE, &cell, req->uri, q, height, width) != -1 ) {
+        if ((cache_check(CACHE, &cell, req->uri, q, height, width) != -1) && (1 == 0) ) {
             printf("CACHE HIT\n");
             body_buffer = cell->pointer;
             body_lenght = cell->length;
@@ -247,11 +250,11 @@ void build_response(struct http_request *req, int conn) {
                     memcpy(full_buffer, header_response, header_lenght);
                     //TODO we disabled the lock temporarly
                     //Get the mutex lock
-                    exit_on_error(pthread_mutex_lock(&mutex) != 0, "error in pthread_mutex_lock");
+                    //exit_on_error(pthread_mutex_lock(&mutex) != 0, "error in pthread_mutex_lock");
                     //Insert item in the cache
-                    cache_insert(CACHE, (void *) body_buffer, *imgsize, req->uri, q, height, width);
+                    //cache_insert(CACHE, (void *) body_buffer, *imgsize, req->uri, q, height, width);
                     //Unlock the mutex
-                    exit_on_error(pthread_mutex_unlock(&mutex) != 0, "error in pthread_mutex_unlock");
+                    //exit_on_error(pthread_mutex_unlock(&mutex) != 0, "error in pthread_mutex_unlock");
                     //Save the image length
                     body_lenght = *imgsize;
                 }
@@ -292,7 +295,7 @@ void build_response(struct http_request *req, int conn) {
     if (strcmp(req->method, "GET") == 0) {
         memcpy(full_buffer + header_lenght, body_buffer, body_lenght);
     }
-    //printf("Print out the header_response\n%s\n", header_response);
+    /*printf("Print out the header_response\n%s\n", header_response);*/
     write_response(full_buffer, header_lenght + body_lenght, conn, req);
 
     //TODO what about this free??
