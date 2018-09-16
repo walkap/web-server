@@ -188,15 +188,15 @@ void build_response(struct http_request *req, int conn) {
 
     if (req->invalid_request) {
         //Read the file and get the file lenght
-        body_buffer = read_file(FILE_DIR, "/400.html", &body_lenght);
+        body_buffer = read_file(FILE_DIR, PAGE_400, &body_lenght);
         //Build header header_response
-        header_response = build_header(400, "text/html", (int) body_lenght, req->version);
+        header_response = build_header(400, TYPE_HTML, body_lenght, req->version);
         exit_on_error(header_response == NULL, "error in build header");
         header_lenght = strlen(header_response);
         //Copy the header header_response in the buffer
         memcpy(full_buffer, header_response, header_lenght);
-        //Check if the request is an image
-    } else if (strstr(req->uri, ".jpg") != NULL) {
+
+    } else if (strstr(req->uri, ".jpg") != NULL) { //Check if the request is an image
         if (req->accept == NULL) {
             q = 1.0;
         } else {
@@ -213,23 +213,23 @@ void build_response(struct http_request *req, int conn) {
             height = (size_t) info[1];
         }
         //Allocate memory for cache struct
-        //cell = malloc(sizeof(struct memory_cell));
-        //exit_on_error(cell == NULL, "error in malloc");
+        cell = malloc(sizeof(struct memory_cell));
+        exit_on_error(cell == NULL, "error in malloc");
         //Check whether an image is in the cache or not
         //TODO we disabled the cache temporarly
-        if ((cache_check(CACHE, &cell, req->uri, q, height, width) != -1) && (1 == 0) ) {
+        if (cache_check(CACHE, &cell, req->uri, q, height, width) != -1 ) {
             printf("CACHE HIT\n");
             body_buffer = cell->pointer;
             body_lenght = cell->length;
-            header_response = build_header(200, "image/jpeg", cell->length, req->version);
+            header_response = build_header(200, TYPE_JPEG, cell->length, req->version);
             memcpy(full_buffer, header_response, strlen(header_response));
         } else {
-            //puts("CACHE MISS\n");
+            puts("CACHE MISS\n");
             //Check if the image is on the file system
             if (is_file_present(IMAGE_DIR, req->uri)) {
                 //Get the image
                 body_buffer = read_file(IMAGE_DIR, req->uri, &body_lenght);
-                header_response = build_header(200, "image/jpeg", body_lenght, req->version);
+                header_response = build_header(200, TYPE_JPEG, body_lenght, req->version);
                 header_lenght = strlen(header_response);
                 memcpy(full_buffer, header_response, header_lenght);
             } else {
@@ -241,17 +241,17 @@ void build_response(struct http_request *req, int conn) {
                     //Process an image with the new width and quality
                     body_buffer = (char *) process_image(original_image_name, width, (float_t) q, imgsize);
                     //Once get the image from the script create a response
-                    header_response = build_header(200, "image/jpeg", *imgsize, req->version);
+                    header_response = build_header(200, TYPE_JPEG, *imgsize, req->version);
                     //Copy the response into the buffer
                     header_lenght = strlen(header_response);
                     memcpy(full_buffer, header_response, header_lenght);
                     //TODO we disabled the lock temporarly
                     //Get the mutex lock
-                    //exit_on_error(pthread_mutex_lock(&mutex) != 0, "error in pthread_mutex_lock");
+                    exit_on_error(pthread_mutex_lock(&mutex) != 0, "error in pthread_mutex_lock");
                     //Insert item in the cache
-                    //cache_insert(CACHE, (void *) body_buffer, *imgsize, req->uri, q, height, width);
+                    cache_insert(CACHE, (void *) body_buffer, *imgsize, req->uri, q, height, width);
                     //Unlock the mutex
-                    //exit_on_error(pthread_mutex_unlock(&mutex) != 0, "error in pthread_mutex_unlock");
+                    exit_on_error(pthread_mutex_unlock(&mutex) != 0, "error in pthread_mutex_unlock");
                     //Save the image length
                     body_lenght = *imgsize;
                 }
@@ -265,11 +265,11 @@ void build_response(struct http_request *req, int conn) {
             //TODO could we save the file type in the structure and move the complexity to the parses?
             //Check the kind of file requested
             if (strstr(req->uri, ".css") != NULL) {
-                type = "text/css";
+                type = TYPE_CSS;
             } else if (strstr(req->uri, ".html") != NULL) {
-                type = "text/html";
+                type = TYPE_HTML;
             } else if (strstr(req->uri, ".js") != NULL) {
-                type = "application/javascript";
+                type = TYPE_JS;
             }
             //Read the file will be our body
             body_buffer = read_file(FILE_DIR, req->uri, &body_lenght);
@@ -281,7 +281,9 @@ void build_response(struct http_request *req, int conn) {
             //Copy the header_response result in the buffer
             memcpy(full_buffer, header_response, header_lenght);
         } else {
-            header_response = build_header(404, " ", 0, req->version);
+            //Read the file and get the file lenght
+            body_buffer = read_file(FILE_DIR, PAGE_404, &body_lenght);
+            header_response = build_header(404, TYPE_HTML, body_lenght, req->version);
             header_lenght = strlen(header_response);
             memcpy(full_buffer, header_response, header_lenght);
         }
@@ -290,7 +292,7 @@ void build_response(struct http_request *req, int conn) {
     if (strcmp(req->method, "GET") == 0) {
         memcpy(full_buffer + header_lenght, body_buffer, body_lenght);
     }
-    printf("Print out the header_response\n%s\n", header_response);
+    //printf("Print out the header_response\n%s\n", header_response);
     write_response(full_buffer, header_lenght + body_lenght, conn, req);
 
     //TODO what about this free??
