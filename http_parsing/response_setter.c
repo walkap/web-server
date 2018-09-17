@@ -1,3 +1,4 @@
+#include <sys/wait.h>
 #include "response_setter.h"
 
 /**This method writes the http response in the socket
@@ -34,6 +35,7 @@ int is_file_present(char *dir, char *filename) {
 
     if ((file = fopen(path, "r"))) {
         fclose(file);
+        free(path);
         return 1;
     }
     free(path);
@@ -78,6 +80,7 @@ char *read_file(char *dir, char *str2, size_t *len) {
     *len = length;
     //Close the file then return the buffer
     fclose(file);
+    free(path);
     return fbuffer;
 }
 
@@ -89,11 +92,7 @@ char *read_file(char *dir, char *str2, size_t *len) {
  * @param version
  * @return
  */
-char *build_header(int status, char *type, size_t len, char *version) {
-    char *buff;
-
-    buff = malloc(sizeof(char) * DIM_HEADER);
-    exit_on_error(buff == NULL, "error in malloc");
+void build_header(int status, char *type, size_t len, char *version, char *buff) {
 
     switch (status) {
         case 200:
@@ -117,7 +116,6 @@ char *build_header(int status, char *type, size_t len, char *version) {
             break;
 
     }
-    return buff;
 }
 
 /**
@@ -171,9 +169,11 @@ int parse_width(char *str) {
  */
 void build_response(struct http_request *req, int conn) {
 
-    char *u_a, *header_response = NULL, *body_buffer = NULL, *full_buffer = NULL, *type = NULL, *original_image_name;
+    char *u_a, *body_buffer = NULL, *full_buffer = NULL, *type = NULL, *original_image_name;
     struct memory_cell *cell;
     int info[2];
+    char *header_response = malloc(DIM_HEADER);
+    exit_on_error(header_response == NULL, "error in malloc");
     double q;
     size_t header_lenght = 0, body_lenght = 0, width;
     size_t *imgsize;
@@ -190,7 +190,7 @@ void build_response(struct http_request *req, int conn) {
         //Read the file and get the file lenght
         body_buffer = read_file(FILE_DIR, PAGE_400, &body_lenght);
         //Build header header_response
-        header_response = build_header(400, TYPE_HTML, body_lenght, req->version);
+        build_header(400, TYPE_HTML, body_lenght, req->version, header_response);
         exit_on_error(header_response == NULL, "error in build header");
         header_lenght = strlen(header_response);
         //Copy the header header_response in the buffer
@@ -218,7 +218,7 @@ void build_response(struct http_request *req, int conn) {
             printf("CACHE HIT\n");
             body_buffer = cell->pointer + sizeof(struct memory_cell);
             body_lenght = cell->length;
-            header_response = build_header(200, TYPE_JPEG, cell->length, req->version);
+            build_header(200, TYPE_JPEG, cell->length, req->version, header_response);
             header_lenght = strlen(header_response);
             memcpy(full_buffer, header_response, header_lenght);
         } else {
@@ -227,10 +227,9 @@ void build_response(struct http_request *req, int conn) {
             if (is_file_present(IMAGE_DIR, req->uri)) {
                 //Get the image
                 body_buffer = read_file(IMAGE_DIR, req->uri, &body_lenght);
-                header_response = build_header(200, TYPE_JPEG, body_lenght, req->version);
+                build_header(200, TYPE_JPEG, body_lenght, req->version, header_response);
                 header_lenght = strlen(header_response);
                 memcpy(full_buffer, header_response, header_lenght);
-
                 exit_on_error(pthread_mutex_lock(&mutex) != 0, "error in pthread_mutex_lock");
                 //Insert item in the cache
                 cache_insert(CACHE, (void *) body_buffer, body_lenght, req->uri, q);
@@ -244,7 +243,7 @@ void build_response(struct http_request *req, int conn) {
                     //Process an image with the new width and quality
                     body_buffer = (char *) process_image(original_image_name, width, (float_t) q, imgsize);
                     //Once get the image from the script create a response
-                    header_response = build_header(200, TYPE_JPEG, *imgsize, req->version);
+                    build_header(200, TYPE_JPEG, *imgsize, req->version, header_response);
                     //Copy the response into the buffer
                     header_lenght = strlen(header_response);
                     memcpy(full_buffer, header_response, header_lenght);
@@ -274,8 +273,7 @@ void build_response(struct http_request *req, int conn) {
             //Read the file will be our body
             body_buffer = read_file(FILE_DIR, req->uri, &body_lenght);
             //Build the header header_response
-            header_response = build_header(200, type, body_lenght, req->version);
-            exit_on_error(header_response == NULL, "error in build header");
+            build_header(200, type, body_lenght, req->version, header_response);
             //Free the memory allocated for the type char pointer
             header_lenght = strlen(header_response);
             //Copy the header_response result in the buffer
@@ -283,7 +281,7 @@ void build_response(struct http_request *req, int conn) {
         } else {
             //Read the file and get the file lenght
             body_buffer = read_file(FILE_DIR, PAGE_404, &body_lenght);
-            header_response = build_header(404, TYPE_HTML, body_lenght, req->version);
+            build_header(404, TYPE_HTML, body_lenght, req->version, header_response);
             header_lenght = strlen(header_response);
             memcpy(full_buffer, header_response, header_lenght);
         }
@@ -296,7 +294,9 @@ void build_response(struct http_request *req, int conn) {
     printf("Print out the header_response\n%s\n", header_response);
     write_response(full_buffer, header_lenght + body_lenght, conn, req);
 
-    free(header_response);
+   free(header_response);
+/*free(body_buffer);*/
+    free(req);
     free(full_buffer);
     free(imgsize);
 
@@ -310,8 +310,9 @@ void build_response(struct http_request *req, int conn) {
  */
 int set_response(char *str, int conn) {
     int alive = 0;
-    struct http_request *request;
-    request = parse_request(str);
+    struct http_request *request = malloc(sizeof(struct http_request));
+    exit_on_error(request == NULL, "error in malloc");
+    parse_request(str, request);
     if (request->alive) {
         alive = 1;
     }

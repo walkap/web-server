@@ -17,6 +17,6 @@ double get_double(char *str);
 double parse_weight(char *str);
 char *parse_user_agent(char *str);
 void parse_request_line(struct http_request *r, char *t);
-struct http_request *parse_request(char *str);
+void parse_request(char *str, struct http_request *request);
 
 #endif //WEB_SERVER_HTTP_PARSER_H

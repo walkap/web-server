@@ -106,6 +106,8 @@ int get_screen_size_ua(const char *ua_str, int *info) {
 
         //free memory, offset and data set
         fiftyoneDegreesFreeDeviceOffsets(offsets);
+        fiftyoneDegreesProviderFree(&provider);
+
         return 0;
     }
 
@@ -127,6 +129,8 @@ int get_screen_size_ua(const char *ua_str, int *info) {
 
     //free memory, offset and data set
     fiftyoneDegreesFreeDeviceOffsets(offsets);
+    fiftyoneDegreesProviderFree(&provider);
+
 
     return 1;
 }

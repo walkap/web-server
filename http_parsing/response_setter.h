@@ -17,7 +17,7 @@
 
 //Definitions
 void write_response(char *response, size_t lenght, int conn, struct http_request *pt);
-char *build_header(int status, char *type, size_t len, char *version);
+void build_header(int status, char *type, size_t len, char *version, char *buff);
 char *read_file(char* dir, char *str2, size_t *len);
 void build_response(struct http_request *req, int conn);
 int set_response(char *str, int conn);

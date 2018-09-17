@@ -66,14 +66,11 @@ void parse_request_line(struct http_request *r, char *t) {
  * @param str
  * @return
  */
-struct http_request *parse_request(char *str) {
-    struct http_request *request;
+void parse_request(char *str, struct http_request *request) {
+
     const char s[3] = "\r\n";
     char *token, *buff;
 
-    //Allocate memory for the request
-    request = malloc(sizeof(struct http_request));
-    exit_on_error(request == NULL, "error in malloc");
 
     //Set some struct params
     request->alive = 0;
@@ -112,5 +109,5 @@ struct http_request *parse_request(char *str) {
         token = strtok(NULL, s);
     }
 
-    return request;
+     //free(buff);
 }

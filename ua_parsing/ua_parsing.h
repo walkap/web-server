@@ -3,6 +3,8 @@
 
 #include "../utils.h"
 #include "src/trie/51Degrees.h"
+#include "src/pattern/51Degrees.h"
+
 
 #define UA_PARSING_DEBUG 0
 #define DATA_PATH "../ua_parsing/src/51Degrees-LiteV3.4.trie";

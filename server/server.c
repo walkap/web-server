@@ -22,9 +22,7 @@ void handle_request(void *arg) {
     struct thread_data *pt = (struct thread_data *) arg;
     int conn = pt->sd, rv, alive;
     ssize_t b_read;
-    char *buff = malloc(MAXLINE);
-    exit_on_error(buff == NULL, "error in malloc");
-
+    char buff[MAXLINE] = {0};
     rv = pthread_detach(pt->thread);
     exit_on_error(rv != 0, "error in pthread_create");
 
@@ -45,8 +43,9 @@ void handle_request(void *arg) {
         struct timeval tv;
         tv.tv_sec = 10;
 
-        rv = setsockopt(conn, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(struct timeval));
+        /*rv =*/ setsockopt(conn, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(struct timeval));
         //exit_on_error(rv < 0, "error in setsockopt");
+
 
         for (;;) {
             b_read = readn(conn, buff, MAXLINE);
@@ -63,9 +62,7 @@ void handle_request(void *arg) {
          printf("INSIDE THREAD %s", buff);
          set_response(buff, conn);
      }*/
-
          printf("\nConnection closed\n");
-         free(buff);
          close_connection(pt);
 }
 
