@@ -95,8 +95,7 @@ int find_less_useful(char *cache, size_t file_length, struct memory_cell **cell)
 /** find less useful with bigger space */
 
 // insert one item in cache and return 1 for success (-1 for error)
-int cache_insert(char *cache, void *file, size_t file_length, char *name, double quality_image, size_t image_height,
-                 size_t image_width){
+int cache_insert(char *cache, void *file, size_t file_length, char *name, double quality_image){
 
     //printf("*** CACHE INSERT ***\n");
 
@@ -113,9 +112,6 @@ int cache_insert(char *cache, void *file, size_t file_length, char *name, double
 
     cell.seconds = time(NULL);
 
-    cell.image_height = image_height;
-
-    cell.image_width = image_width;
 
     struct memory_cell* empty_cell;
 
@@ -183,8 +179,7 @@ void cache_print(char *cache) {
 }
 
 // check if one item is in the cache
-int cache_check(char *cache, struct memory_cell **cell, char *name, double quality_image,
-                size_t imageLength, size_t imageWidth){
+int cache_check(char *cache, struct memory_cell **cell, char *name, double quality_image){
 
     //cache_print(cache);
     //printf("*** CACHE CHECK ****\n");
@@ -202,8 +197,7 @@ int cache_check(char *cache, struct memory_cell **cell, char *name, double quali
         //printf("control checkMemory cache: %p\n", cells);
         //printf("control checkMemory i: %d\n", i);
 
-        if(strcmp(cells -> title, name) == 0 && cells -> quality == quality_image &&
-            cells -> image_height == imageLength && cells -> image_width == imageWidth){
+        if(strcmp(cells -> title, name) == 0 && cells -> quality == quality_image){
 
             //sleep(1);
 
