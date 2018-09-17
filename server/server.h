@@ -12,17 +12,10 @@
 struct thread_data {
     pthread_t thread;
     int sd;
+    /*char *addr;
+    int port;*/
 };
 
-struct thread_data *alloc_thread_data() {
-    struct thread_data *td = malloc(sizeof(struct thread_data) * MAXCONN);
-    exit_on_error(td == NULL, "error in malloc");
-
-    for (int j = 0; j < MAXCONN; j++) {
-        td[j].sd = -1;
-    }
-    return td;
-}
 
 //TODO why we need to function to call to run a server?
 int init_server();
