@@ -168,7 +168,6 @@ unsigned char *process_image(char *source, size_t width, float_t quality, size_t
 #if IMAGE_PRO_DEBUG
 int main() {
     size_t *imgsize = malloc(sizeof(size_t));
-    //TODO we don't need height at all
-    process_image("/wizard.jpg", 1025,1, imgsize);
+    process_image("/wizard.jpg", 1025, imgsize);
 }
 #endif

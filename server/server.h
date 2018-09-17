@@ -16,8 +16,6 @@ struct thread_data {
     int port;*/
 };
 
-
-//TODO why we need to function to call to run a server?
 int init_server();
 void run_server(int *listensd);
 

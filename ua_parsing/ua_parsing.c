@@ -110,7 +110,6 @@ int get_screen_size_ua(const char *ua_str, int *info) {
     }
 
     //Initialize the element of the two values array
-    //TODO check this if it works with images greater than 1200
     char *ptr;
     if(strtol(width, &ptr, 0) > 1280 || strtol(height, &ptr, 0) > 1200) {
         info[0] = 1200;

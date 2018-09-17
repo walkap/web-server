@@ -17,8 +17,7 @@ int readn(int conn, char *ptr, int n) {
 
     while (nleft > 0) {
         fflush(stdout);
-        if ((readn = recv(conn, ptr, nleft, 0)) >
-            0) { //TODO This should be used as infinite loop, wait till something arrive
+        if ((readn = recv(conn, ptr, nleft, 0)) > 0) {
             nleft -= readn;
             ptr += readn;
             if (*(ptr - 2) == '\r' && *(ptr - 1) == '\n') {
