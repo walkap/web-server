@@ -86,14 +86,17 @@ int init_server() {
     struct sockaddr_in addr;
     listensd = socket(AF_INET, SOCK_STREAM, 0);
     exit_on_error(listensd < 0, "error in socket");
+    int optval = 1;
+    /*rv = setsockopt(listensd, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval));
+    exit_on_error(rv < 0, "error in setsockopt");
+    tr = 1;
+    rv = setsockopt(listensd, SOL_SOCKET, SO_REUSEADDR, &tr, sizeof(int));
+    exit_on_error(rv < 0, "error in setsockopt");*/
     set_addr(&addr);
     rv = bind(listensd, (struct sockaddr *) &addr, sizeof(addr));
     exit_on_error(rv < 0, "error in bind");
     rv = listen(listensd, BACKLOG);
     exit_on_error(rv < 0, "error in listen");
-    tr = 1;
-    rv = setsockopt(listensd, SOL_SOCKET, SO_REUSEADDR, &tr, sizeof(int));
-    exit_on_error(rv < 0, "error in setsockopt");
 
     return listensd;
 }
@@ -107,7 +110,7 @@ int find_free_thread(struct thread_data *pt) {
     int c = 0;
     while (pt[c].sd != -1) {
         if (c == MAXCONN) {
-            sleep(1);
+            usleep(100);
             c = 0;
             continue;
         }
@@ -160,23 +163,30 @@ void run_server(int *listensd) {
     printf("------Waiting for requests------\n");
     fflush(stdout);
 
-    while( (connsd = accept(*listensd, (struct sockaddr *) &client, &len) ) > 0){
+    while ((connsd = accept(*listensd, (struct sockaddr *) &client, &len)) > 0) {
         slot = find_free_thread(td);
         exit_on_error(slot == -1, "max num of connections reached");
 
+        int optval = 1;
+        received_value = setsockopt(connsd, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval));
+        exit_on_error(received_value < 0, "error in setsockopt");
+        int tr = 1;
+        received_value = setsockopt(connsd, SOL_SOCKET, SO_REUSEADDR, &tr, sizeof(int));
+        exit_on_error(received_value < 0, "error in setsockopt");
+
         td[slot].sd = connsd;
 
-      /*  struct sockaddr_in* pV4Addr = (struct sockaddr_in*)&client;
+        struct sockaddr_in *pV4Addr = (struct sockaddr_in *) &client;
         struct in_addr ipAddr = pV4Addr->sin_addr;
-        char* str = malloc(INET_ADDRSTRLEN);
-        inet_ntop( AF_INET, &ipAddr, str, INET_ADDRSTRLEN );
+        char *str = malloc(INET_ADDRSTRLEN);
+        inet_ntop(AF_INET, &ipAddr, str, INET_ADDRSTRLEN);
         printf("CLIENT sin port: %d\n", (int) client.sin_port);
 
-        td[slot].addr= str;
-        td[slot].port= client.sin_port;
+        /*td[slot].addr= str;
+        td[slot].port= client.sin_port;*/
 
         printf("CLIENT sin addr: %s\n", str);
-        int socket;
+        /*int socket;
         if ((socket = thread_exist(td, str, client.sin_port))>0) {
             char *buff = malloc(MAXLINE);
             printf("CONNECTION ALREADY EXISTS\n");
@@ -187,10 +197,10 @@ void run_server(int *listensd) {
             printf("WRITTEN BYTES: %d\n", (int) written_bytes);
         }else {
             td[slot].addr= str;
-            td[slot].port= client.sin_port;
-*/
+            td[slot].port= client.sin_port;*/
             received_value = pthread_create(&(td[slot].thread), NULL, (void *) handle_request, (void *) &td[slot]);
             exit_on_error(received_value != 0, "error in pthread_create");
+            //pause();
         }
     }
 

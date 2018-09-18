@@ -105,7 +105,7 @@ int get_screen_size_ua(const char *ua_str, int *info) {
         puts("The device size in unknown!");
 
         //free memory, offset and data set
-        fiftyoneDegreesFreeDeviceOffsets(offsets);
+        //fiftyoneDegreesFreeDeviceOffsets(offsets);
         fiftyoneDegreesProviderFree(&provider);
 
         return 0;
@@ -128,7 +128,7 @@ int get_screen_size_ua(const char *ua_str, int *info) {
     }
 
     //free memory, offset and data set
-    fiftyoneDegreesFreeDeviceOffsets(offsets);
+    //fiftyoneDegreesFreeDeviceOffsets(offsets);
     fiftyoneDegreesProviderFree(&provider);
 
 
