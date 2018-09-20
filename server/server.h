@@ -12,11 +12,9 @@
 struct thread_data {
     pthread_t thread;
     int sd;
-    /*char *addr;
-    int port;*/
 };
 
 int init_server();
-void run_server(int *listensd);
+void run_server(int *listen_sd);
 
 #endif //WEB_SERVER_H
