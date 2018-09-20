@@ -195,7 +195,7 @@ void build_response(struct http_request *req, int conn) {
 
     } else if (strstr(req->uri, ".jpg") != NULL) { //Check if the request is an image
         if (req->accept == NULL) {
-            q = 1.0;
+            q = 0.8;
         } else {
             q = parse_weight(req->accept);
         }
@@ -238,7 +238,7 @@ void build_response(struct http_request *req, int conn) {
                 if (is_file_present(IMAGE_DIR, original_image_name)) {
                     printf("In process\n");
                     //Process an image with the new width and quality
-                    body_buffer = (char *) process_image(original_image_name, width, (float_t) q, imgsize);
+                    body_buffer = (char *) process_image(original_image_name, width, q, imgsize);
                     //Once get the image from the script create a response
                     build_header(200, TYPE_JPEG, *imgsize, req->version, header_response);
                     //Copy the response into the buffer

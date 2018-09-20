@@ -7,7 +7,7 @@
  * @return double
  */
 double get_double(char *str) {
-    if (str == NULL) return 1.0;
+    if (str == NULL) return 0.8;
     while (*str && !(isdigit(*str) || ((*str == '-' || *str == '+') && isdigit(*(str + 1)))))
         str++;
     return strtod(str, NULL);
@@ -100,7 +100,7 @@ void parse_request(char *str, struct http_request *request) {
             request->user_agent = token;
         }
         //Check for the Accept item then save it into the struct
-        if (strstr(token, "Accept:") != NULL && strstr(token, "Accept: */*") != 0) {
+        if (strstr(token, "Accept:") != NULL) {
             request->accept = token;
         }
         //Check for the Connection item then save it into the struct
