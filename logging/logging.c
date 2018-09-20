@@ -1,28 +1,33 @@
 #include "logging.h"
 
-FILE *open_logfile(char *s) {
+/**
+ * This function returns a pointer to the beginning of the log file
+ * @param path
+ * @return *FILE
+ */
+FILE *open_logfile(char *path) {
     FILE *fptr;
-    fptr = fopen(s, "a");
+    fptr = fopen(path, "a");
     exit_on_error(fptr == NULL, "error in opening file");
 
     return fptr;
 }
 
 /**
- * This method writes logs about every request and response in the logfile.
+ * This function writes logs about every request and response in the logfile.
  *
- * @param pt
- * @param str
+ * @param request
+ * @param response
  * @param lenght
  */
-void logging(struct http_request *pt, char *str) {
+void logging(struct http_request *request, char *response) {
     int rv;
-    char *s = " ", *response;
+    char *s, *response_line;
     struct tm tm;
     time_t t;
 
     s = "\r";
-    response = strtok(str, s);
+    response_line = strtok(response, s);
 
     t = time(NULL);
     tm = *localtime(&t);
@@ -36,10 +41,10 @@ void logging(struct http_request *pt, char *str) {
             tm.tm_hour,
             tm.tm_min,
             tm.tm_sec,
-            pt->method,
-            pt->version,
-            pt->uri,
-            response);
+            request->method,
+            request->version,
+            request->uri,
+            response_line);
 
     rv = fclose(ptr);
     exit_on_error(rv < 0, "error in closing file");

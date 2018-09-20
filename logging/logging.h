@@ -7,7 +7,6 @@
 
 #define LOG_FILE "../logfile"
 
-FILE *open_logfile(char *s);
-void logging(struct http_request *pt, char *str);
+void logging(struct http_request *request, char *response);
 
 #endif //WEB_SERVER_LOGGING_H
