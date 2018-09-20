@@ -7,13 +7,20 @@ void exit_on_error(int condition, const char *message) {
     }
 }
 
-int readn(int conn, char *ptr, int n) {
+/**
+ * When timeout expires ERRNO is set to EWOULDBLOCK
+ * @param conn
+ * @param ptr
+ * @param n_bytes
+ * @return int
+ */
+int readn(int conn, char *ptr, int n_bytes) {
     ssize_t readn;
     size_t nleft;
     errno = 0;
     int r = 0;
 
-    nleft = n;
+    nleft = (size_t) n_bytes;
 
     while (nleft > 0) {
         fflush(stdout);
@@ -49,25 +56,4 @@ ssize_t writen(int fd, const void *buf, size_t n) {
         ptr += nwritten;
     }
     return (nleft);
-}
-
-/**
- * Returns the size of the content of the file
- * @param fd file descriptor
- * @return  off_t the offset of the file
- */
-off_t get_file_size(int fd) {
-    int stat;
-    struct stat info;
-
-    //Get file info and save into the struct created
-    stat = fstat(fd, &info);
-    if (stat == -1) {
-        perror("fstat()");
-        exit(EXIT_FAILURE);
-    }
-    //Get the result
-    off_t size = info.st_size;
-
-    return size;
 }
