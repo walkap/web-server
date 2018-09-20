@@ -1,7 +1,6 @@
-#include <sys/wait.h>
 #include "response_setter.h"
 
-/**This method writes the http response in the socket
+/**This function writes the http response in the socket
  *
  * @param response
  * @param lenght
@@ -11,7 +10,6 @@
 void write_response(char *response, size_t lenght, int conn, struct http_request *pt) {
     ssize_t b_written;
 
-
     b_written = writen(conn, response, (size_t) lenght);
     exit_on_error(b_written == -1, "error in write");
 
@@ -20,9 +18,9 @@ void write_response(char *response, size_t lenght, int conn, struct http_request
 }
 
 /**
- * This method searches if the image requested is present in the server
+ * This function searches if the image requested is present in the server
  * @param filename
- * @return
+ * @return int
  */
 int is_file_present(char *dir, char *filename) {
     FILE *file;
@@ -43,10 +41,10 @@ int is_file_present(char *dir, char *filename) {
 }
 
 /**
- * This method reads a html file and saves it in a buffer
+ * This function reads a html file and saves it in a buffer
  * @param str2
  * @param len
- * @return
+ * @return char*
  */
 char *read_file(char *dir, char *str2, size_t *len) {
     char *fbuffer, *path;
@@ -85,12 +83,11 @@ char *read_file(char *dir, char *str2, size_t *len) {
 }
 
 /**
- * This method builds the header of the http response header according to parameters
+ * This function builds the header of the http response header according to parameters
  * @param status
  * @param type
  * @param len
  * @param version
- * @return
  */
 void build_header(int status, char *type, size_t len, char *version, char *buff) {
 
@@ -121,7 +118,7 @@ void build_header(int status, char *type, size_t len, char *version, char *buff)
 /**
  * This function return the original name from a requested image
  * @param requested_name
- * @return
+ * @return char*
  */
 char * get_original_image_name(char *requested_name) {
     char *src = malloc(strlen(requested_name)+1);
@@ -142,7 +139,7 @@ char * get_original_image_name(char *requested_name) {
  * This function parse the image name from request returnig the width of the image in order
  * to respect the structure name-widthw.jpg
  * @param str the image name
- * @return integer
+ * @return int
  */
 int parse_width(char *str) {
     char *src = malloc(strlen(str)+1);
@@ -162,7 +159,7 @@ int parse_width(char *str) {
 }
 
 /**
- * This method builds an http response message according to the uri requested. If the uri is an image,
+ * This function builds an http response message according to the uri requested. If the uri is an image,
  * the cache is checked, if the image is not in the cache, it is processed, saved in cache and sent in the response.
  * @param req
  * @param conn
@@ -171,7 +168,7 @@ void build_response(struct http_request *req, int conn) {
 
     char *u_a, *body_buffer = NULL, *full_buffer = NULL, *type = NULL, *original_image_name;
     struct memory_cell *cell;
-    int info[2];
+    int size;
     char *header_response = malloc(DIM_HEADER);
     exit_on_error(header_response == NULL, "error in malloc");
     double q;
@@ -205,10 +202,10 @@ void build_response(struct http_request *req, int conn) {
         //Get the user agent from browser
         u_a = parse_user_agent(req->user_agent);
         //Get image sizes from the user agent
-        if(get_screen_size_ua(u_a, info) == 0){
-            width = (size_t ) parse_width(req->uri);
+        if(get_screen_size_ua(u_a, &size) == 0){
+            width = (size_t) parse_width(req->uri);
         }else{
-            width = (size_t) info[0];
+            width = (size_t) size;
         }
         //Allocate memory for cache struct
         cell = malloc(sizeof(struct memory_cell));
@@ -291,22 +288,20 @@ void build_response(struct http_request *req, int conn) {
         memcpy(full_buffer + header_lenght, body_buffer, body_lenght);
     }
 
-    printf("Print out the header_response\n%s\n", header_response);
+    printf("\n%s\n", header_response);
     write_response(full_buffer, header_lenght + body_lenght, conn, req);
 
-   free(header_response);
-/*free(body_buffer);*/
-    free(req);
+    free(header_response);
     free(full_buffer);
+    free(req);
     free(imgsize);
-
 }
 
 /**
- * This method is used to specify if the request has a valid sintax and then builds a response
+ * This function is used to specify if the request has a valid sintax and then builds a response
  * @param str - buffer used to store the request
  * @param conn -
- * @return
+ * @return int
  */
 int set_response(char *str, int conn) {
     int alive = 0;
