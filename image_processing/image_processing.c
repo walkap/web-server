@@ -53,9 +53,10 @@ void resize_image(MagickBooleanType status, MagickWand *magick_wand, size_t widt
  * @param magick_wand - the magick wand object associated to the image we want to resize
  * @param quality - quality requested for the image we want to compress
  */
-void compress_image(MagickBooleanType status, MagickWand *magick_wand, float_t quality) {
+void compress_image(MagickBooleanType status, MagickWand *magick_wand, double quality) {
     //Compress the image
-    status = MagickSetImageCompressionQuality(magick_wand, (size_t) quality * 100);
+    const size_t compression =  (const size_t) (quality * 100);
+    status = MagickSetImageCompressionQuality(magick_wand,compression);
     //Check the compressing status
     if (status == MagickFalse) {
         ThrowWandException(magick_wand);
@@ -120,7 +121,7 @@ char *rename_file(const char *filename, size_t width) {
  * @param newsize - The size of the new blob
  * @return A blob to the image file
  */
-unsigned char *process_image(char *source, size_t width, float_t quality, size_t *newsize) {
+unsigned char *process_image(char *source, size_t width, double quality, size_t *newsize) {
     unsigned char *blob;
     char *path, *destination;
     MagickBooleanType status;
@@ -143,10 +144,10 @@ unsigned char *process_image(char *source, size_t width, float_t quality, size_t
     }
     free(path);
     //Check if quality value was set
-    if (quality != -1) {
+    //if (quality != -1) {
         //Image quality compression
         compress_image(status, magick_wand, quality);
-    }
+    //}
     //Set the right size based on some standard values
     width = set_width(width);
     //Resize the image with the new width
@@ -160,7 +161,7 @@ unsigned char *process_image(char *source, size_t width, float_t quality, size_t
     blob = MagickGetImageBlob(magick_wand, newsize);
 
     //Destroy the magick wand
-    //DestroyMagickWand(magick_wand); //TODO disable to avoid an error
+    // DestroyMagickWand(magick_wand); //TODO disable to avoid an error
     MagickWandTerminus();
     return blob;
 }
@@ -168,7 +169,6 @@ unsigned char *process_image(char *source, size_t width, float_t quality, size_t
 #if IMAGE_PRO_DEBUG
 int main() {
     size_t *imgsize = malloc(sizeof(size_t));
-    //TODO we don't need height at all
-    process_image("/wizard.jpg", 1025,1, imgsize);
+    process_image("/avengers.jpg", 767,0.01,imgsize);
 }
 #endif

@@ -1,9 +1,6 @@
 #include "ua_parsing.h"
 #include "../image_processing/image_processing.h"
 
-//Global provider
-static fiftyoneDegreesProvider provider;
-
 /**
  * Get the right property based on the argument property passed could be for example "ScreenPixelsWidth" or others
  * @param dataSet The dataset already initialized
@@ -14,7 +11,6 @@ static fiftyoneDegreesProvider provider;
 const char *get_property(fiftyoneDegreesDataSet *dataSet, fiftyoneDegreesDeviceOffsets *offsets, char *property){
     int32_t requiredPropertyIndex;
     const char *value = NULL;
-    //const char *property = "ScreenPixelsWidth";
     //Returns the index in the array of required properties for this name, or -1 if not found.
     requiredPropertyIndex = fiftyoneDegreesGetRequiredPropertyIndex(dataSet, property);
     if (requiredPropertyIndex >= 0 && requiredPropertyIndex <
@@ -54,15 +50,15 @@ void reportDatasetInitStatus(fiftyoneDegreesDataSetInitStatus status, const char
 /**
  * Init the global provider with properties
  * @param properties
- * @return return 0 if init is ok
+ * @return int
  */
-int init_provider() {
+int init_provider(fiftyoneDegreesProvider *provider) {
     const char *fileName = DATA_PATH;
     const char *properties = PROPERTIES;
     //Init provider with property string
     fiftyoneDegreesDataSetInitStatus status =
             //Initialises the provider using the file provided and a string of properties.
-            fiftyoneDegreesInitProviderWithPropertyString(fileName, &provider, properties);
+            fiftyoneDegreesInitProviderWithPropertyString(fileName, provider, properties);
     //Check the init status and then return
     if (status != DATA_SET_INIT_STATUS_SUCCESS) {
         reportDatasetInitStatus(status, fileName);
@@ -76,18 +72,17 @@ int init_provider() {
 /**
  * This function get the device information about the screen size
  * @param ua_str The user agent string should be passed
- * @param info is used to save information device as an array of strings
- * @return Returns 0 in case of success, 1 if the device size is unknown
+ * @param size is used to save information device as an array of strings
+ * @return int
  */
-int get_screen_size_ua(const char *ua_str, int *info) {
+int get_screen_size_ua(const char *ua_str, int *size) {
 
-    //Values we want to return
-    char *width, *height;
+    char *width, *ptr;
 
-    //Allocate enough mem for hte two dimensions
-    //const char **info = malloc(sizeof(char *) * 2);
     //Init provider
-    init_provider();
+    fiftyoneDegreesProvider provider;
+
+    init_provider(&provider);
     //Data set
     fiftyoneDegreesDataSet *dataSet = provider.active->dataSet;
     //init the offset
@@ -98,36 +93,29 @@ int get_screen_size_ua(const char *ua_str, int *info) {
     fiftyoneDegreesSetDeviceOffset(dataSet, ua_str, 0, offsets->firstOffset);
     //Get device size
     width = (char *)get_property(dataSet, offsets, "ScreenPixelsWidth");
-    height = (char *)get_property(dataSet, offsets, "ScreenPixelsHeight");
 
     //Check if device size are available, if not then return 1
-    if(strcmp(width, UNKNOWN) == 0 || strcmp(height, UNKNOWN) == 0){
+    if(strcmp(width, UNKNOWN) == 0){
         puts("The device size in unknown!");
-
         //free memory, offset and data set
-        fiftyoneDegreesFreeDeviceOffsets(offsets);
+        fiftyoneDegreesProviderFree(&provider);
+
         return 0;
     }
 
     //Initialize the element of the two values array
-    //TODO check this if it works with images greater than 1200
-    char *ptr;
-    if(strtol(width, &ptr, 0) > 1280 || strtol(height, &ptr, 0) > 1200) {
-        info[0] = 1200;
-        info[1] = 1200;
+    if(strtol(width, &ptr, 0) > 1280) {
+        *size = 1280;
     }else{
-        int w,h;
+        int w;
         char *pt;
         w =  (int) strtol(width, &pt, 0);
         exit_on_error(*pt != '\0', "error in strtol width");
-        h =  (int) strtol(height, &pt, 0);
-        exit_on_error(*pt != '\0', "error in strtol height");
-        info[0] = w;
-        info[1] = h;
+        *size = w;
     }
 
     //free memory, offset and data set
-    fiftyoneDegreesFreeDeviceOffsets(offsets);
+    fiftyoneDegreesProviderFree(&provider);
 
     return 1;
 }

@@ -1,38 +1,50 @@
 #include "logging.h"
 
-FILE *open_logfile(char *s) {
+/**
+ * This function returns a pointer to the beginning of the log file
+ * @param path
+ * @return *FILE
+ */
+FILE *open_logfile(char *path) {
     FILE *fptr;
-    fptr = fopen(s, "a");
+    fptr = fopen(path, "a");
     exit_on_error(fptr == NULL, "error in opening file");
 
     return fptr;
 }
 
 /**
- * This method writes logs about every request and response in the logfile.
+ * This function writes logs about every request and response in the logfile.
  *
- * @param pt
- * @param str
+ * @param request
+ * @param response
  * @param lenght
  */
-void logging(struct http_request *pt, char *str, size_t lenght) {
+void logging(struct http_request *request, char *response) {
     int rv;
-    char *s = " ";
-    char *response;
+    char *s, *response_line;
+    struct tm tm;
+    time_t t;
 
     s = "\r";
-    response = strtok(str, s);
+    response_line = strtok(response, s);
 
-    time_t t = time(NULL);
-    struct tm tm = *localtime(&t);
+    t = time(NULL);
+    tm = *localtime(&t);
 
-    char *user_agent = parse_user_agent(pt->user_agent);
+    FILE *ptr = open_logfile(LOG_FILE);
 
-    FILE *ptr = open_logfile("../logfile");
-
-    fprintf(ptr, "%s %s %s  %d-%d-%d %d:%d:%d   %s   %s    %lu\n", pt->method,
-            pt->uri, pt->version, tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec,
-            user_agent, response, lenght);
+    fprintf(ptr, "[%d-%d-%d %d:%d:%d] %s %s %s %s\n",
+            tm.tm_year + 1900,
+            tm.tm_mon + 1,
+            tm.tm_mday,
+            tm.tm_hour,
+            tm.tm_min,
+            tm.tm_sec,
+            request->method,
+            request->version,
+            request->uri,
+            response_line);
 
     rv = fclose(ptr);
     exit_on_error(rv < 0, "error in closing file");

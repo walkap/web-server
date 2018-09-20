@@ -23,6 +23,6 @@
   exit( -1 ); \
 }
 
-unsigned char *process_image(char *source, size_t width, float_t quality, size_t *size);
+unsigned char *process_image(char *source, size_t width, double quality, size_t *size);
 
 #endif //WEB_SERVER_IMAGE_RESIZING_H

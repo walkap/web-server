@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>Content Adaptation</title>
+    <link href="css/bootstrap.css" rel="stylesheet">
+</head>
+<body>
+<main role="main" class="container">
+    <h1>Content Adaptation</h1>
+
+    <h2>Not Found!</h2>
+    <p>
+        We are sorry but it seems that the page you are looking for it doesn't exist!
+    </p>
+    <figure class="text-center px-2">
+        <img srcset="/wizard-320w.jpg 320w,
+                    /wizard-480w.jpg 480w,
+                    /wizard-768w.jpg 768w"
+             sizes="(max-width: 320px) 320w,
+                    (max-width: 480px) 480w,
+                    (max-width: 768px) 768w"
+             src="/wizard.jpg" class="mw-100 h-auto">
+    </figure>
+
+</main>
+<footer class="footer">
+    <div class="container">
+        <span class="text-muted">Developed with love by students of Tor Vergata University</span>
+    </div>
+</footer>
+<script src="js/bootstrap.js"></script>
+</body>
+</html>

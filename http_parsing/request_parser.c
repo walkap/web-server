@@ -1,16 +1,22 @@
 #include "request_parser.h"
+#include "../server/server.h"
 
+/**
+ * This function finds the quality weight in the accept string
+ * @param str
+ * @return double
+ */
 double get_double(char *str) {
-    if (str == NULL) return 1.0;
+    if (str == NULL) return 0.8;
     while (*str && !(isdigit(*str) || ((*str == '-' || *str == '+') && isdigit(*(str + 1)))))
         str++;
     return strtod(str, NULL);
 }
 
 /**
- * This method searches for the weight q in a "Accept:" header line
+ * This function searches for the weight q in a "Accept:" header line
  * @param str
- * @return
+ * @return double
  */
 double parse_weight(char *str) {
     char *s = "q";
@@ -23,8 +29,9 @@ double parse_weight(char *str) {
 }
 
 /**
+ * Separates the user agent from the header line
  * @param str
- * @return
+ * @return char*
  */
 char *parse_user_agent(char *str) {
     char *newStr = str;
@@ -33,55 +40,46 @@ char *parse_user_agent(char *str) {
 }
 
 /**
- * This method parses the request line to search for the method, protocol version and the uri requested
- * @param r
- * @param t
+ * This function parses the request line to search for the method, protocol version and the uri requested
+ * @param request
+ * @param header_line
  */
-void parse_request_line(struct http_request *r, char *t) {
-    char *sc = " ";
-    char *token;
+void parse_request_line(struct http_request *request, char *header_line) {
 
-    //Tokenize the string param and then check if the request is GET or HEAD
-    token = strtok(t, sc);
-    exit_on_error(t == NULL, "error in strtok in parse_request_line");
-    if (strstr(t, "GET") != NULL)
-        r->method = "GET";
-    if (strstr(token, "HEAD") != NULL)
-        r->method = "HEAD";
+    char *p,*end;
 
-    //Token the same string and the same param the save the value to the uri struct
-    token = strtok(NULL, sc);
-    exit_on_error(token == NULL, "error in strtok in parse_request_line");
-    r->uri = token;
+    if (strstr(header_line, "GET") != NULL)
+        request->method = "GET";
+    if (strstr(header_line, "HEAD") != NULL)
+        request->method = "HEAD";
+    if (strstr(header_line, "HTTP/1.1") != NULL)
+        request->version = "HTTP/1.1";
+    if (strstr(header_line, "HTTP/1.0") != NULL)
+        request->version = "HTTP/1.0";
 
-    //Change the delimiter and get the http version and save it into the version struct
-    sc = "\r";
-    token = strtok(NULL, sc);
-    exit_on_error(token == NULL, "error in strtok in parse_request_line");
-    r->version = token;
+    p = header_line;
+    while (*(p++) != ' ') {}
+
+    end = p;
+    while (*(end++) != ' ') {}
+    end--;
+    *end = '\0';
+    request->uri = p;
 }
 
 /**
- * This method builds a http_request struct that contains info regarding requests
+ * This function builds a http_request struct that contains info regarding requests
  * @param str
- * @return
  */
-struct http_request *parse_request(char *str) {
-    struct http_request *request;
-    const char s[3] = "\r\n";
-    char *token, *buff;
+void parse_request(char *str, struct http_request *request) {
 
-    //Allocate memory for the request
-    request = malloc(sizeof(struct http_request));
-    exit_on_error(request == NULL, "error in malloc");
+    const char s[3] = "\r\n";
+    char *token;
+    char buff[MAXLINE];
 
     //Set some struct params
     request->alive = 0;
     request->accept = NULL;
-
-    //Allocate enough memory to contain the request string
-    buff = malloc(strlen(str) + 1);
-    exit_on_error(buff == NULL, "error in malloc");
 
     //Copy the arg str in the new buffer
     strcpy(buff, str);
@@ -102,7 +100,7 @@ struct http_request *parse_request(char *str) {
             request->user_agent = token;
         }
         //Check for the Accept item then save it into the struct
-        if (strstr(token, "Accept:") != NULL && strstr(token, "Accept: */*") != 0) {
+        if (strstr(token, "Accept:") != NULL) {
             request->accept = token;
         }
         //Check for the Connection item then save it into the struct
@@ -111,6 +109,4 @@ struct http_request *parse_request(char *str) {
         }
         token = strtok(NULL, s);
     }
-
-    return request;
 }
