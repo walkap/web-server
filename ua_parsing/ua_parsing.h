@@ -11,6 +11,6 @@
 #define PROPERTIES "ScreenPixelsWidth,ScreenPixelsHeight,PlatformName,IsMobile"
 #define UNKNOWN "Unknown"
 
-int get_screen_size_ua(const char *ua_str, int *info);
+int get_screen_size_ua(const char *ua_str, int *size);
 
 #endif //WEB_SERVER_USER_AGENT_PARSING_H
