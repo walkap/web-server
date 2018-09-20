@@ -8,6 +8,13 @@
 #define BACKLOG 10
 #define MAXLINE 30000
 #define MAXCONN 1000
+#define CACHE_ACTIVE 0
+
+#if CACHE_ACTIVE
+#define N_PAGES 10000
+char *CACHE;
+pthread_mutex_t mutex;
+#endif
 
 struct thread_data {
     pthread_t thread;

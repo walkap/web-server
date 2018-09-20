@@ -134,9 +134,15 @@ void run_server(int *listen_sd) {
     socklen_t len = sizeof(struct sockaddr_in);
     struct thread_data *td = alloc_thread_data();
 
+    #if CACHE_ACTIVE
+
+    printf("CACHE initialize\n");
+
     if (cache_initialize(N_PAGES, &CACHE) == -1) {
         fprintf(stdout, "error in cache_initialize\n");
     }
+
+    #endif
 
     printf("Server started at http://localhost:8000/index.html\n");
     printf("------Waiting for requests------\n");

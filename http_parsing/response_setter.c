@@ -120,8 +120,8 @@ void build_header(int status, char *type, size_t len, char *version, char *buff)
  * @param requested_name
  * @return char*
  */
-char * get_original_image_name(char *requested_name) {
-    char *src = malloc(strlen(requested_name)+1);
+char *get_original_image_name(char *requested_name) {
+    char *src = malloc(strlen(requested_name) + 1);
     exit_on_error(src == NULL, "error in malloc");
     strcpy(src, requested_name);
     char *token, *new_name, *delimiter;
@@ -142,8 +142,8 @@ char * get_original_image_name(char *requested_name) {
  * @return int
  */
 int parse_width(char *str) {
-    char *src = malloc(strlen(str)+1);
-    exit_on_error(src==NULL, "error in malloc");
+    char *src = malloc(strlen(str) + 1);
+    exit_on_error(src == NULL, "error in malloc");
     strcpy(src, str);
     char *token1, *token2, *pt;
     int output;
@@ -167,13 +167,16 @@ int parse_width(char *str) {
 void build_response(struct http_request *req, int conn) {
 
     char *u_a, *body_buffer = NULL, *full_buffer = NULL, *type = NULL, *original_image_name;
-    struct memory_cell *cell;
     int size;
     char *header_response = malloc(DIM_HEADER);
     exit_on_error(header_response == NULL, "error in malloc");
     double q;
     size_t header_lenght = 0, body_lenght = 0, width;
     size_t *imgsize;
+
+#if CACHE_ACTIVE
+    struct memory_cell *cell;
+#endif
 
     //Allocate memory for the content to sent over the socket
     full_buffer = malloc(BUFFDIM);
@@ -202,15 +205,18 @@ void build_response(struct http_request *req, int conn) {
         //Get the user agent from browser
         u_a = parse_user_agent(req->user_agent);
         //Get image sizes from the user agent
-        if(get_screen_size_ua(u_a, &size) == 0){
+        if (get_screen_size_ua(u_a, &size) == 0) {
             width = (size_t) parse_width(req->uri);
-        }else{
+        } else {
             width = (size_t) size;
         }
+
+#if CACHE_ACTIVE
         //Allocate memory for cache struct
         cell = malloc(sizeof(struct memory_cell));
         exit_on_error(cell == NULL, "error in malloc");
         //Check whether an image is in the cache or not
+
         if ((cache_check(CACHE, &cell, req->uri, q) != -1)) {
             printf("CACHE HIT\n");
             body_buffer = cell->pointer + sizeof(struct memory_cell);
@@ -220,42 +226,53 @@ void build_response(struct http_request *req, int conn) {
             memcpy(full_buffer, header_response, header_lenght);
         } else {
             puts("CACHE MISS\n");
-            //Check if the image is on the file system
-            if (is_file_present(IMAGE_DIR, req->uri)) {
-                //Get the image
-                body_buffer = read_file(IMAGE_DIR, req->uri, &body_lenght);
-                build_header(200, TYPE_JPEG, body_lenght, req->version, header_response);
+#endif
+
+        //Check if the image is on the file system
+        if (is_file_present(IMAGE_DIR, req->uri)) {
+            //Get the image
+            body_buffer = read_file(IMAGE_DIR, req->uri, &body_lenght);
+            build_header(200, TYPE_JPEG, body_lenght, req->version, header_response);
+            header_lenght = strlen(header_response);
+            memcpy(full_buffer, header_response, header_lenght);
+
+#if CACHE_ACTIVE
+            exit_on_error(pthread_mutex_lock(&mutex) != 0, "error in pthread_mutex_lock");
+            //Insert item in the cache
+            cache_insert(CACHE, (void *) body_buffer, body_lenght, req->uri, q);
+            //Unlock the mutex
+            exit_on_error(pthread_mutex_unlock(&mutex) != 0, "error in pthread_mutex_unlock");
+#endif
+
+        } else {
+            //Check if the original exists
+            original_image_name = get_original_image_name(req->uri);
+            if (is_file_present(IMAGE_DIR, original_image_name)) {
+                printf("In process\n");
+                //Process an image with the new width and quality
+                body_buffer = (char *) process_image(original_image_name, width, q, imgsize);
+                //Once get the image from the script create a response
+                build_header(200, TYPE_JPEG, *imgsize, req->version, header_response);
+                //Copy the response into the buffer
                 header_lenght = strlen(header_response);
                 memcpy(full_buffer, header_response, header_lenght);
+
+#if CACHE_ACTIVE
+                //Get the mutex lock
                 exit_on_error(pthread_mutex_lock(&mutex) != 0, "error in pthread_mutex_lock");
                 //Insert item in the cache
-                cache_insert(CACHE, (void *) body_buffer, body_lenght, req->uri, q);
+                cache_insert(CACHE, (void *) body_buffer, *imgsize, req->uri, q);
                 //Unlock the mutex
                 exit_on_error(pthread_mutex_unlock(&mutex) != 0, "error in pthread_mutex_unlock");
-            } else {
-                //Check if the original exists
-                original_image_name = get_original_image_name(req->uri);
-                if (is_file_present(IMAGE_DIR, original_image_name)) {
-                    printf("In process\n");
-                    //Process an image with the new width and quality
-                    body_buffer = (char *) process_image(original_image_name, width, q, imgsize);
-                    //Once get the image from the script create a response
-                    build_header(200, TYPE_JPEG, *imgsize, req->version, header_response);
-                    //Copy the response into the buffer
-                    header_lenght = strlen(header_response);
-                    memcpy(full_buffer, header_response, header_lenght);
-                    //Get the mutex lock
-                    exit_on_error(pthread_mutex_lock(&mutex) != 0, "error in pthread_mutex_lock");
-                    //Insert item in the cache
-                    cache_insert(CACHE, (void *) body_buffer, *imgsize, req->uri, q);
-                    //Unlock the mutex
-                    exit_on_error(pthread_mutex_unlock(&mutex) != 0, "error in pthread_mutex_unlock");
-                    //Save the image length
-                    body_lenght = *imgsize;
-                }
-                free(original_image_name);
+#endif
+                //Save the image length
+                body_lenght = *imgsize;
             }
+            free(original_image_name);
         }
+#if CACHE_ACTIVE
+        }
+#endif
     } else {
         //Check whether a file is present or not
         if (is_file_present(FILE_DIR, req->uri)) {

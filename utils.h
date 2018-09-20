@@ -23,14 +23,10 @@
 #include <ImageMagick-7/MagickWand/MagickWand.h>
 
 #define DIM_HEADER 300
-#define N_PAGES 10000
 #define BUFFDIM 2000000
 
 #define IMAGE_DIR "../www/images"
 #define FILE_DIR "../www"
-
-char *CACHE;
-pthread_mutex_t mutex;
 
 void exit_on_error (int condition, const char * message);
 int readn(int conn, char *ptr, int n_bytes);
